@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Exclusive Offer — Rewards Flow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+  <!-- Tailwind (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Vue 3 (Global Build) -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+  <style>
+    /* Небольшие вспомогательные стили */
+    .sticky-cta {
+      position: sticky; bottom: 0; z-index: 40;
+      background: rgba(255,255,255,0.92); backdrop-filter: saturate(1.2) blur(6px);
+    }
+    .tiny { font-size: .82rem; line-height: 1.1rem; }
+    .shadow-card { box-shadow: 0 10px 30px rgb(0 0 0 / 8%); }
+    .maxw { max-width: 720px; }
+    /* Перекрыть img внутри <details> в мобиле */
+    details { border-left: 3px solid #e5e7eb; padding-left: .75rem; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+<div id="app" class="min-h-screen flex flex-col">
+  <header class="w-full border-b bg-white">
+    <div class="container py-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+          <div class="rounded-full w-8 h-8 bg-indigo-600"></div>
+          <strong class="text-lg">Rewards</strong>
+        </div>
+        <div class="text-sm text-gray-500">Session: {{ session.sessionId }}</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container flex-1 py-6">
+    <div class="mx-auto maxw">
+      <!-- STEP: INTRO (Exclusive Offer) -->
+      <section v-if="step==='intro'" class="bg-white p-4 p-md-5 rounded-3 shadow-card">
+        <!-- TrustedForm & Jornaya: начать запись здесь -->
+        <div class="mb-3">
+          <!-- TrustedForm embed (cert & ping captured into hidden inputs further below) -->
+          <script type="text/javascript">
+            (function() {
+              var tf = document.createElement('script'); tf.type = 'text/javascript'; tf.async = true;
+              var field = 'xxTrustedFormCertUrl', ping = 'xxTrustedFormPingUrl';
+              tf.src = 'https://api.trustedform.com/trustedform.js?field=' + field + '&ping_field=' + ping + '&l=' + (new Date().getTime()+Math.random());
+              var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(tf, s);
+            })();
+          </script>
+          <noscript>
+            <img src="https://api.trustedform.com/ns.gif?field=xxTrustedFormCertUrl&ping_field=xxTrustedFormPingUrl" alt="">
+          </noscript>
+
+          <!-- Jornaya LeadiD -->
+          <script id="LeadiDscript" type="text/javascript">
+            (function() {
+              var s = document.createElement('script'); s.id = 'LeadiDscript_campaign';
+              s.src = 'https://create.lidstatic.com/campaign/' + 'YOUR_JORNAYA_CAMPAIGN_ID' + '.js?snippet_version=2';
+              var holder = document.getElementById('LeadiDscript'); holder.appendChild(s);
+            })();
+          </script>
+        </div>
+
+        <h1 class="text-2xl md:text-3xl font-semibold mb-2">Exclusive Offer!</h1>
+        <p class="text-gray-600 mb-4">Unlock your reward below — digital delivery with FREE shipping included.</p>
+
+        <div class="d-flex gap-3 align-items-center mb-3">
+          <span class="text-2xl">🔒</span>
+          <div>
+            <div class="text-sm text-gray-500">Item you “won”</div>
+            <div class="font-medium">{{ rewardItem }}</div>
+          </div>
+        </div>
+
+        <div class="bg-gray-100 rounded-2 p-3 d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <div class="text-xs text-gray-500">Total Amount Awarded</div>
+            <div class="text-2xl font-semibold" id="rollupDisplay">$1,000,000</div>
+          </div>
+          <div class="text-sm text-gray-500">Real-time counter</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Enter your email so we can contact you</label>
+          <input v-model.trim="lead.email" type="email" class="form-control" placeholder="you@example.com" @keyup.enter="goEmail()">
+        </div>
+
+        <!-- Hidden TF & Jornaya fields captured for posting -->
+        <input type="hidden" id="leadid_token" name="universal_leadid" v-model="lead.universal_leadid">
+        <input type="hidden" id="xxTrustedFormCertUrl" name="xxTrustedFormCertUrl" v-model="lead.trustedform_cert_url">
+        <input type="hidden" id="xxTrustedFormPingUrl" name="xxTrustedFormPingUrl" v-model="lead.trustedform_ping_url">
+
+        <div class="sticky-cta mt-3 p-3 border rounded-3 d-flex justify-content-between align-items-center">
+          <small class="text-gray-500">By clicking Continue you agree to our Terms, Privacy, and session recording.</small>
+          <button class="btn btn-primary" :disabled="!validEmail" @click="goEmail()">Continue</button>
+        </div>
+      </section>
+
+      <!-- STEP: PII -->
+      <section v-if="step==='pii'" class="bg-white p-4 p-md-5 rounded-3 shadow-card">
+        <h2 class="text-xl font-semibold mb-2">Now just the basics</h2>
+        <p class="text-gray-600 mb-4">We use this to match your reward and relevant offers.</p>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">First Name</label>
+            <input v-model.trim="lead.firstName" type="text" class="form-control" placeholder="John">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Last Name</label>
+            <input v-model.trim="lead.lastName" type="text" class="form-control" placeholder="Doe">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Date of Birth</label>
+            <input v-model="lead.dob" type="date" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Gender</label>
+            <select v-model="lead.gender" class="form-select">
+              <option value="" disabled>Select...</option>
+              <option>Female</option><option>Male</option><option>Non-binary</option><option>Prefer not to say</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sticky-cta mt-3 p-3 border rounded-3 d-flex justify-content-between align-items-center">
+          <small class="text-gray-500">We protect your data. See our Privacy Policy.</small>
+          <div>
+            <button class="btn btn-outline-secondary me-2" @click="backTo('intro')">Back</button>
+            <button class="btn btn-primary" :disabled="!validPII" @click="goPII()">Continue</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP: ADDRESS -->
+      <section v-if="step==='address'" class="bg-white p-4 p-md-5 rounded-3 shadow-card">
+        <h2 class="text-xl font-semibold mb-2">Provide your address</h2>
+        <p class="text-gray-600 mb-4">We’ll do our best to autofill. (US ZIP → City/State)</p>
+
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label">Address Line 1</label>
+            <input v-model.trim="lead.address1" type="text" class="form-control" placeholder="123 Main St">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Apt/Suite (optional)</label>
+            <input v-model.trim="lead.address2" type="text" class="form-control" placeholder="Apt 4B">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">ZIP Code</label>
+            <input v-model.trim="lead.zip" type="text" class="form-control" placeholder="90210" @change="zipLookup">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">City</label>
+            <input v-model.trim="lead.city" type="text" class="form-control" placeholder="Beverly Hills">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">State</label>
+            <input v-model.trim="lead.state" type="text" class="form-control" placeholder="CA">
+          </div>
+        </div>
+
+        <div class="sticky-cta mt-3 p-3 border rounded-3 d-flex justify-content-between align-items-center">
+          <small class="text-gray-500">Autofill uses public ZIP data (zippopotam.us).</small>
+          <div>
+            <button class="btn btn-outline-secondary me-2" @click="backTo('pii')">Back</button>
+            <button class="btn btn-primary" :disabled="!validAddress" @click="goAddress()">Continue</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP: PHONE + TCPA -->
+      <section v-if="step==='phone'" class="bg-white p-4 p-md-5 rounded-3 shadow-card">
+        <h2 class="text-xl font-semibold mb-2">Phone number</h2>
+        <p class="text-gray-600 mb-3">So we can contact you about your reward.</p>
+
+        <div class="mb-3">
+          <label class="form-label">Phone</label>
+          <input v-model.trim="lead.phone" type="tel" class="form-control" placeholder="(555) 123-4567">
+        </div>
+
+        <div class="p-3 rounded-2 border bg-gray-50">
+          <label class="d-flex align-items-start gap-2">
+            <input type="checkbox" v-model="consents.main" class="mt-1">
+            <span class="tiny">
+              <strong>TCPA Consent:</strong> By selecting “Continue”, I provide my ESIGN signature and express consent for
+              <em>[Website]</em>, <a href="https://unified-marketingpartners.com/subsidiaries2" target="_blank" rel="noopener">these partners</a>,
+              USMsg, MyJobMobile, Grant-Navigators, OMG Sweeps, Best Day Ever Sweepstakes, FamilyRecoveryHub, Dollar-Sensei
+              to contact me at the phone number I provided for marketing and transactional messages via text and calls, which may use automated,
+              manual, prerecorded, or AI technology, until I revoke consent. This applies even if my number is on a Do Not Call list.
+              Consent is not required to use this site or obtain goods/services.
+              <a href="#" @click.prevent="proceedWithoutConsent">Click here to proceed without consent.</a>
+              I have read and agree to the Terms & Conditions, including mandatory arbitration for resolving disputes and TCPA claims.
+            </span>
+          </label>
+        </div>
+
+        <div class="sticky-cta mt-3 p-3 border rounded-3 d-flex justify-content-between align-items-center">
+          <small class="text-gray-500">You can revoke consent anytime.</small>
+          <div>
+            <button class="btn btn-outline-secondary me-2" @click="backTo('address')">Back</button>
+            <button class="btn btn-primary" :disabled="!validPhone" @click="goPhone()">Continue</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP: QUIZ -->
+      <section v-if="step==='quiz'" class="bg-white p-4 p-md-5 rounded-3 shadow-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="text-xl font-semibold">Quick Questions</h2>
+          <div class="text-sm text-gray-500">Progress: {{ quizProgress }} / {{ activeSequence.length }}</div>
+        </div>
+
+        <div v-if="currentQuestion" class="mb-3">
+          <div class="mb-2 fw-medium">{{ currentQuestion.label }}</div>
+
+          <!-- single choice -->
+          <div v-if="currentQuestion.type==='single'" class="d-flex flex-column gap-2">
+            <label v-for="opt in currentQuestion.options" :key="opt" class="d-flex align-items-center gap-2">
+              <input type="radio" :name="currentQuestion.code" class="form-check-input"
+                     :value="opt" v-model="answers[currentQuestion.storeAs]" @change="onAnswerChange(currentQuestion, opt)">
+              <span>{{ opt }}</span>
+            </label>
+          </div>
+
+          <!-- multi choice -->
+          <div v-else-if="currentQuestion.type==='multi'" class="d-flex flex-column gap-2">
+            <label v-for="opt in currentQuestion.options" :key="opt" class="d-flex align-items-center gap-2">
+              <input type="checkbox" class="form-check-input"
+                     :value="opt" @change="onMultiToggle(currentQuestion.storeAs, opt)">
+              <span>{{ opt }}</span>
+            </label>
+          </div>
+
+          <!-- TCPA under some questions -->
+          <div v-if="currentConsentKey" class="mt-3 p-3 bg-gray-50 rounded-2 border tiny">
+            <details open>
+              <summary class="fw-medium">Consent disclosure ({{ currentConsentKey }})</summary>
+              <div v-html="CONSENT_TEXT[currentConsentKey]"></div>
+              <div class="mt-2">
+                <label class="d-flex gap-2">
+                  <input type="checkbox" v-model="consentsByKey[currentConsentKey]">
+                  <span>I agree to the above disclosure.</span>
+                </label>
+                <div class="mt-1">
+                  <a href="#" @click.prevent="skipConsent(currentConsentKey)">Proceed without consent</a>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div class="sticky-cta mt-3 p-3 border rounded-3 d-flex justify-content-between align-items-center">
+          <button class="btn btn-outline-secondary" @click="skipQuestion">Skip</button>
+          <div>
+            <button class="btn btn-outline-secondary me-2" @click="prevQuestion" :disabled="quizIndex===0">Back</button>
+            <button class="btn btn-primary" @click="nextQuestion">Next</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP: END -->
+      <section v-if="step==='end'" class="bg-white p-4 p-md-5 rounded-3 shadow-card">
+        <h2 class="text-xl font-semibold mb-2">All set!</h2>
+        <p class="text-gray-600 mb-3">Thanks — we’ll reach out via email with instructions to claim your reward. You can also click below.</p>
+
+        <div class="d-flex gap-2">
+          <a class="btn btn-success" href="#" @click.prevent="getReward">Get my reward</a>
+          <button class="btn btn-outline-secondary" @click="showDebug = !showDebug">{{ showDebug ? 'Hide' : 'Show' }} Data</button>
+        </div>
+
+        <div v-if="showDebug" class="mt-4">
+          <pre class="tiny bg-gray-100 p-3 rounded-2 overflow-auto">{{ exportPayload }}</pre>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="w-full border-t bg-white">
+    <div class="container py-3 tiny text-gray-500">
+      © 2025 Rewards — <a href="#" class="text-decoration-underline">Terms</a> ·
+      <a href="#" class="text-decoration-underline">Privacy</a> ·
+      <a href="#" class="text-decoration-underline">Do Not Sell</a>
+    </div>
+  </footer>
+</div>
+
+<!-- Bootstrap JS (optional for minor helpers) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+<script>
+const { createApp, reactive, computed, onMounted } = Vue;
+
+createApp({
+  setup() {
+    // ----------- CONFIG -----------
+    const DEFAULT_SEQUENCE = 'V1';
+    const QUIZ = {
+      variants: {
+        V1: ["Q_FEEL_LUCKY","Q_CHECKING","Q_EMPLOYMENT","Q_HEALTH","Q_HOME","Q_AUTOCARS","Q_HOME_IMPROVE","Q_MVA","Q_EDU","Q_RX","Q_VETS","Q_AUTO_OVERPAY"],
+        V2: ["Q_REWARD_USE","Q_STOP_SIGN","Q_HEALTH","Q_HOME","Q_HOME_IMPROVE","Q_AUTOCARS","Q_MVA","Q_RX"]
+      },
+      showIf: {
+        Q_AUTOCARS: { "home.tenure": "Rent" },
+        Q_HOME_IMPROVE: { "home.tenure": "Own" }
+      },
+      consents: {
+        Q_HEALTH: "MEDICARE_TCPA",
+        Q_MVA: "MVA_TCPA",
+        Q_RX: "RX_TCPA"
+      },
+      questions: {
+        Q_REWARD_USE: { code:"Q_REWARD_USE", type:"single", label:"How do you plan to use your reward?", options:["Save It","Spend It","Still Deciding"], storeAs:"intent.reward_use" },
+        Q_STOP_SIGN:  { code:"Q_STOP_SIGN",  type:"single", label:"What color is a stop sign?", options:["Blue","Yellow","Red","Green"], storeAs:"knowledge.stop_sign" },
+        Q_FEEL_LUCKY: { code:"Q_FEEL_LUCKY", type:"single", label:"Are you feeling lucky?", options:["Yes","No"], storeAs:"meta.feel_lucky" },
+        Q_CHECKING:   { code:"Q_CHECKING",   type:"single", label:"Do you have an active checking account?", options:["Yes","No"], storeAs:"bank.has_checking" },
+        Q_EMPLOYMENT: { code:"Q_EMPLOYMENT", type:"single", label:"What is your employment status?", options:["Full Time","Part Time","Unemployed","On Disability","Other"], storeAs:"demog.employment" },
+        Q_HEALTH:     { code:"Q_HEALTH",     type:"single", label:"Which best describes your Health Insurance coverage?", options:["Medicare","Medicaid","Medicare & Medicaid","Insurance through work","Marketplace or Private Insurance","Uninsured","Skip"], storeAs:"health.coverage" },
+        Q_HOME:       { code:"Q_HOME",       type:"single", label:"Do you rent or own your home?", options:["Rent","Own"], storeAs:"home.tenure" },
+        Q_AUTOCARS:   { code:"Q_AUTOCARS",   type:"single", label:"How many cars are in your household?", options:["1","2","3+","None"], storeAs:"auto.cars" },
+        Q_HOME_IMPROVE:{code:"Q_HOME_IMPROVE",type:"multi", label:"Which home improvement projects are you considering?", options:["windows","roofing","bathroom remodel","gutter replacement","walk in tubs","solar","none"], storeAs:"home.improve_choices" },
+        Q_MVA:        { code:"Q_MVA",        type:"single", label:"Were you hurt in an auto accident that was someone else's fault in the last 12 months?", options:["Yes","No"], storeAs:"mva.accident12mo" },
+        Q_EDU:        { code:"Q_EDU",        type:"single", label:"Are you interested in continuing your education?", options:["Yes","No"], storeAs:"edu.interest" },
+        Q_RX:         { code:"Q_RX",         type:"single", label:"Do you take 7 or more prescription medications?", options:["YES","NO"], storeAs:"rx.7plus" },
+        Q_VETS:       { code:"Q_VETS",       type:"single", label:"Veterans: Get Up to $3,600/mo Tax-Free — are you interested?", options:["Yes","No"], storeAs:"vets.interest" },
+        Q_AUTO_OVERPAY:{code:"Q_AUTO_OVERPAY",type:"single",label:"Since 2024, auto insurance rates surged. Are you overpaying for your insurance?", options:["Yes","No"], storeAs:"auto.overpay" }
+      }
+    };
+
+    // TCPA / Compliance text blocks (HTML allowed)
+    const CONSENT_TEXT = {
+      MEDICARE_TCPA: `
+        <p>
+          By selecting any option above (except "Skip"), I provide my express written consent for a representative or 
+          licensed sales agent (SelectQuote and affiliated entities, Aragon Advertising LLC, Highland Health, AgencyPro, 
+          Medicare Health Advisors, Platinum Choice Healthcare, Senior Healthcare Advisors, Seafront Marketing, Americas Health, 
+          Medigap Life, Prime Medicare Solutions, Benefitlink, DH Insurance, Kaiser, PolicySaver LLC, ProHealth Partners, ClearChoice Health, etc.) 
+          to contact me regarding Medicare-related plans and other health services via call/text (including automated/prerecorded/AI) 
+          even if my number is on the DNC list. I may revoke consent at any time. I acknowledge Terms (incl. mandatory arbitration). 
+          Licensed Sales Agents are not connected with or endorsed by the U.S. government or the federal Medicare program.
+        </p>
+      `,
+      MVA_TCPA: `
+        <p>
+          AGREEMENT TO BE CONTACTED: By selecting "Yes", I provide my ESIGN signature and written consent to 
+          Liberty Aid Network, DV Injury Marketing, DV Injury Law, The Accident Office, Top Law Assist, A P.C., 
+          Car Accident Helpline, AccidentHelpersHQ, Auto Claim Center, Lerner and Rowe to call or text me about legal services 
+          via manual or automated dialing and prerecorded or artificial voice (including AI) technology, until I revoke consent. 
+          Consent is not a requirement to continue on this website; click "No" to proceed without providing consent. 
+          I acknowledge previously agreed Terms, including the mandatory arbitration provision.
+        </p>
+      `,
+      RX_TCPA: `
+        <p>
+          AGREEMENT TO BE CONTACTED: By clicking "Yes", I provide my electronic signature and express written consent to permit
+          ExactCare Pharmacy, and parties calling on its behalf, to contact me at the number provided for marketing purposes, 
+          including automated technology/SMS/prerecorded/AI voice. My consent is not required to purchase or receive services.
+          I may revoke consent any time. I acknowledge Terms & Conditions, including mandatory arbitration.
+        </p>
+      `
+    };
+
+    // ----------- STATE -----------
+    const step = Vue.ref('intro');
+    const rewardItem = Vue.ref('🎯 $500 Target Gift Card'); // или 🎁 $100 Amazon Gift Card
+    const session = reactive({
+      sessionId: Math.random().toString(36).slice(2, 10),
+      variant: new URLSearchParams(location.search).get('v') || DEFAULT_SEQUENCE
+    });
+
+    const lead = reactive({
+      email: '',
+      firstName: '',
+      lastName: '',
+      dob: '',
+      gender: '',
+      address1: '',
+      address2: '',
+      city: '',
+      state: '',
+      zip: '',
+      phone: '',
+      universal_leadid: '',          // Jornaya token (auto-populated by script)
+      trustedform_cert_url: '',      // TrustedForm cert URL (auto-populated by script)
+      trustedform_ping_url: ''       // TrustedForm ping URL (auto-populated by script)
+    });
+
+    // Answers store & Consents
+    const answers = reactive({});              // storeAs -> value(s)
+    const consents = reactive({ main: false }); // main TCPA (phone page)
+    const consentsByKey = reactive({});        // keyed consents (MEDICARE_TCPA, etc.)
+
+    // Quiz navigation
+    const activeSequence = computed(() => QUIZ.variants[session.variant] || QUIZ.variants[DEFAULT_SEQUENCE]);
+    const quizIndex = Vue.ref(0);
+    const quizProgress = computed(() => Math.min(quizIndex.value + 1, activeSequence.value.length));
+    const currentQuestion = computed(() => {
+      const code = activeSequence.value[quizIndex.value];
+      return QUIZ.questions[code];
+    });
+    const currentConsentKey = computed(() => {
+      const q = currentQuestion.value;
+      if (!q) return null;
+      return QUIZ.consents[q.code] || null;
+    });
+
+    // ----------- VALIDATION -----------
+    const validEmail = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lead.email));
+    const validPII = computed(() => !!lead.firstName && !!lead.lastName && !!lead.dob && !!lead.gender);
+    const validAddress = computed(() => !!lead.address1 && !!lead.city && !!lead.state && !!lead.zip);
+    const validPhone = computed(() => {
+      // Простая проверка длины цифр
+      const digits = (lead.phone || '').replace(/\D/g, '');
+      return digits.length >= 10; // USA
+    });
+
+    // ----------- ACTIONS -----------
+    function rollUp() {
+      const el = document.getElementById('rollupDisplay');
+      if (!el) return;
+      const from = 1_000_000, to = 1_450_000, dur = 2200;
+      const t0 = performance.now();
+      const fmt = new Intl.NumberFormat('en-US');
+      function tick(now) {
+        const p = Math.min(1, (now - t0) / dur);
+        const val = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 2)));
+        el.textContent = '$' + fmt.format(val);
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function backTo(target) { step.value = target; }
+    function goEmail() {
+      console.log('form_email_submitted', { email: lead.email, session: session.sessionId });
+      step.value = 'pii';
+    }
+    function goPII() {
+      console.log('form_pii_submitted', { firstName: lead.firstName, lastName: lead.lastName, dob: lead.dob, gender: lead.gender });
+      step.value = 'address';
+    }
+    function goAddress() {
+      console.log('form_address_submitted', { city: lead.city, state: lead.state, zip: lead.zip });
+      step.value = 'phone';
+    }
+    function proceedWithoutConsent() {
+      consents.main = false;
+      goPhone(); // продолжить без главного согласия
+    }
+    function goPhone() {
+      console.log('form_phone_submitted', { phone: lead.phone, consent: consents.main });
+      // старт квиза
+      quizIndex.value = 0;
+      step.value = 'quiz';
+      ensureMultiArrays();
+      advanceIfHidden(); // если первый вопрос скрыт по showIf
+    }
+
+    function ensureMultiArrays() {
+      // для multi-типов гарантируем массив
+      Object.values(QUIZ.questions).forEach(q => {
+        if (q.type === 'multi' && !Array.isArray(answers[q.storeAs])) {
+          answers[q.storeAs] = [];
+        }
+      });
+    }
+
+    function showIfPass(code) {
+      const rule = QUIZ.showIf[code];
+      if (!rule) return true;
+      const [k, v] = Object.entries(rule)[0]; // "home.tenure": "Rent"
+      return (answers[k] === v);
+    }
+
+    function onAnswerChange(q, opt) {
+      // отметим согласия по зависимым вопросам
+      if (q.code === 'Q_HEALTH') {
+        // Если "Skip" — не требовать Medicare consent
+        if (opt === 'Skip') consentsByKey['MEDICARE_TCPA'] = false;
+      }
+    }
+
+    function onMultiToggle(storeKey, opt) {
+      if (!Array.isArray(answers[storeKey])) answers[storeKey] = [];
+      const idx = answers[storeKey].indexOf(opt);
+      if (idx === -1) answers[storeKey].push(opt);
+      else answers[storeKey].splice(idx, 1);
+    }
+
+    function requiredConsentOk() {
+      const key = currentConsentKey.value;
+      if (!key) return true; // не требуется
+      const code = currentQuestion.value.code;
+      // Логика: требуем согласие только для позитивных ответов, как в исходнике
+      if (code === 'Q_MVA' && answers['mva.accident12mo'] !== 'Yes') return true;
+      if (code === 'Q_RX'  && answers['rx.7plus'] !== 'YES') return true;
+      if (code === 'Q_HEALTH' && answers['health.coverage'] === 'Skip') return true;
+      return !!consentsByKey[key]; // должно быть принято
+    }
+
+    function skipConsent(key) {
+      consentsByKey[key] = false;
+      nextQuestion(); // продолжить без согласия
+    }
+
+    function nextQuestion() {
+      if (currentQuestion.value) {
+        // если не пройдены условия согласия — остановить
+        if (!requiredConsentOk()) {
+          alert('Please accept the disclosure or proceed without consent using the link.');
+          return;
+        }
+        console.log('quiz_answer', {
+          code: currentQuestion.value.code,
+          storeAs: currentQuestion.value.storeAs,
+          value: answers[currentQuestion.value.storeAs]
+        });
+      }
+      // далее — следующий видимый вопрос
+      do {
+        quizIndex.value++;
+      } while (quizIndex.value < activeSequence.value.length && !showIfPass(activeSequence.value[quizIndex.value]));
+      if (quizIndex.value >= activeSequence.value.length) {
+        step.value = 'end';
+        console.log('quiz_complete', { session: session.sessionId });
+      }
+    }
+
+    function prevQuestion() {
+      do {
+        quizIndex.value = Math.max(quizIndex.value - 1, 0);
+      } while (quizIndex.value > 0 && !showIfPass(activeSequence.value[quizIndex.value]));
+    }
+
+    function skipQuestion() {
+      console.log('quiz_skip', { code: currentQuestion.value?.code });
+      nextQuestion();
+    }
+
+    function advanceIfHidden() {
+      // если текущий вопрос скрыт по showIf — сразу перескочить
+      if (!showIfPass(activeSequence.value[quizIndex.value])) nextQuestion();
+    }
+
+    async function zipLookup() {
+      const zip = (lead.zip || '').trim();
+      if (!/^\d{5}$/.test(zip)) return;
+      try {
+        const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.places && data.places[0]) {
+          lead.city = data.places[0]['place name'] || lead.city;
+          lead.state = data.places[0]['state abbreviation'] || lead.state;
+        }
+      } catch (e) { /* тихий фолбэк */ }
+    }
+
+    function getReward() {
+      console.log('end_reward_click', { session: session.sessionId });
+      alert('Thanks! We’ll email you instructions to claim your reward.');
+    }
+
+    const exportPayload = computed(() => JSON.stringify({
+      session,
+      lead,
+      answers,
+      consents: { main: consents.main, ...consentsByKey }
+    }, null, 2));
+
+    // ----------- LIFECYCLE -----------
+    onMounted(() => {
+      rollUp();
+      // Попытка считать Jornaya/TF значения, если скрипты их заполнили
+      const syncIds = () => {
+        const l = document.getElementById('leadid_token');         if (l) lead.universal_leadid = l.value || lead.universal_leadid;
+        const tfc = document.getElementById('xxTrustedFormCertUrl');if (tfc) lead.trustedform_cert_url = tfc.value || lead.trustedform_cert_url;
+        const tfp = document.getElementById('xxTrustedFormPingUrl'); if (tfp) lead.trustedform_ping_url = tfp.value || lead.trustedform_ping_url;
+      };
+      setInterval(syncIds, 500); // простая периодическая синхронизация
+    });
+
+    // UI helpers
+    const showDebug = Vue.ref(false);
+
+    return {
+      // state
+      step, rewardItem, session, lead, answers, consents, consentsByKey,
+      // config
+      CONSENT_TEXT,
+      // computed
+      validEmail, validPII, validAddress, validPhone,
+      activeSequence, currentQuestion, currentConsentKey, quizIndex, quizProgress, exportPayload,
+      // actions
+      backTo, goEmail, goPII, goAddress, proceedWithoutConsent, goPhone,
+      onAnswerChange, onMultiToggle, nextQuestion, prevQuestion, skipQuestion, skipConsent,
+      zipLookup, getReward,
+      // ui
+      showDebug
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

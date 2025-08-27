@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Offer Finder</title>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb',
+            primaryDark: '#1d4ed8',
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Vue 3 CDN -->
+  <!-- Dynamic lightweight polyfill loader (avoids polyfill.io dependency) -->
+  <script>
+  (function(){
+    // Skip if very old (no document.head) or already modern enough
+    if(!document.head) return;
+    const need = { core:false, fetch:false, io:false, ro:false };
+    if(!window.Promise || !window.Symbol || !Object.assign || !Array.prototype.flat || !window.Map || !window.Set) need.core = true;
+    if(!('fetch' in window) || !('AbortController' in window)) need.fetch = true;
+    if(!('IntersectionObserver' in window)) need.io = true;
+    if(!('ResizeObserver' in window)) need.ro = true;
+    const tasks = [];
+    function add(src){ const s=document.createElement('script'); s.src=src; s.defer=false; s.crossOrigin='anonymous'; tasks.push(new Promise(r=>{s.onload=r; s.onerror=r; })); document.head.appendChild(s); }
+    if(need.core) add('https://cdn.jsdelivr.net/npm/core-js-bundle@3.38.0/minified.js');
+    if(need.fetch) add('https://cdn.jsdelivr.net/npm/whatwg-fetch@3.6.20/dist/fetch.umd.min.js');
+    if(need.io) add('https://cdn.jsdelivr.net/npm/intersection-observer@0.12.2/intersection-observer.js');
+    if(need.ro) add('https://cdn.jsdelivr.net/npm/resize-observer-polyfill@1.5.1/dist/ResizeObserver.global.js');
+    // queueMicrotask polyfill (very small) if missing
+    if(!('queueMicrotask' in window)) window.queueMicrotask = cb => Promise.resolve().then(cb);
+  })();
+  </script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <!-- (Removed external question templates; using inline sections) -->
+  <style>
+    /* Simple fade/slide transitions */
+    .fade-enter-active, .fade-leave-active { transition: opacity .25s, transform .25s; }
+    .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(4px); }
+  /* Sliding panel stack */
+  .step-stack { position: relative; }
+  .step-panel { position:absolute; inset:0; opacity:0; transform:translateX(40px); pointer-events:none; transition:opacity .45s cubic-bezier(.4,0,.2,1), transform .55s cubic-bezier(.4,0,.2,1); }
+  .step-panel.before { transform:translateX(-40px); }
+  .step-panel.after { transform:translateX(40px); }
+  .step-panel.active { position:relative; opacity:1; transform:translateX(0); pointer-events:auto; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-800 antialiased selection:bg-primary/20">
+  <div id="app" class="min-h-screen flex flex-col">
+    <header class="sticky top-0 z-30 backdrop-blur bg-white/90 border-b border-slate-200/70">
+      <div class="max-w-xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <h1 class="text-lg font-bold tracking-tight text-primary">Offer Finder</h1>
+        <div class="flex items-center gap-2 w-full justify-end" v-if="step <= lastQuestionStep">
+          <span class="text-xs font-medium text-slate-500">Step {{ Math.min(step,lastQuestionStep) }} / {{ lastQuestionStep }}</span>
+        </div>
+      </div>
+      <div class="h-1 w-full bg-slate-200/70">
+        <div class="h-full bg-primary transition-all duration-300" :style="{width: progressPercent + '%'}"></div>
+      </div>
+    </header>
+
+    <main class="flex-1">
+  <form @submit.prevent="onSubmit" class="max-w-xl mx-auto px-4 py-6" novalidate>
+        <div class="space-y-0 step-stack min-h-[420px]">
+          <!-- QUIZ 1 (default) -->
+          <section :class="panelClasses(1)" data-step="1" data-next="2" data-role="question" v-show="quizVersion===1" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">How do you plan to use your reward?</h2>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <button type="button" @click="selectAnswer('q_reward_use','Save It',2)" :class="answerBtn('q_reward_use','Save It')">Save It</button>
+              <button type="button" @click="selectAnswer('q_reward_use','Spend It',2)" :class="answerBtn('q_reward_use','Spend It')">Spend It</button>
+              <button type="button" @click="selectAnswer('q_reward_use','Still Deciding',2)" :class="answerBtn('q_reward_use','Still Deciding')">Still Deciding</button>
+            </div>
+          </section>
+          <section :class="panelClasses(2)" data-step="2" data-next="4" data-role="question" v-show="quizVersion===1" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <div class="flex items-center justify-between">
+              <h2 class="text-2xl font-semibold tracking-tight">What color is a stop sign?</h2>
+              <button type="button" @click="nextStepOverride=3; nextStep();" class="text-[11px] underline text-primary/70 hover:text-primary">Health (Optional)</button>
+            </div>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <button type="button" @click="selectAnswer('q_stop_sign','Blue',4)" :class="answerBtn('q_stop_sign','Blue')">Blue</button>
+              <button type="button" @click="selectAnswer('q_stop_sign','Yellow',4)" :class="answerBtn('q_stop_sign','Yellow')">Yellow</button>
+              <button type="button" @click="selectAnswer('q_stop_sign','Red',4)" :class="answerBtn('q_stop_sign','Red')">Red</button>
+              <button type="button" @click="selectAnswer('q_stop_sign','Green',4)" :class="answerBtn('q_stop_sign','Green')">Green</button>
+            </div>
+          </section>
+          <section :class="panelClasses(3)" data-step="3" data-next="4" data-role="question" v-show="quizVersion===1" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">Health Insurance Coverage (Optional)</h2>
+            <p class="text-sm text-slate-600">Which best describes your Health Insurance coverage?</p>
+            <p class="text-xs text-slate-500">Click to be connected with a licensed sales agent to check your eligibility to enroll and to review your Medicare Advantage plan options.</p>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <button type="button" @click="selectAnswer('q_health','Medicare',4)" :class="answerBtn('q_health','Medicare')">Medicare</button>
+              <button type="button" @click="selectAnswer('q_health','Medicaid',4)" :class="answerBtn('q_health','Medicaid')">Medicaid</button>
+              <button type="button" @click="selectAnswer('q_health','Medicare & Medicaid',4)" :class="answerBtn('q_health','Medicare & Medicaid')">Medicare & Medicaid</button>
+              <button type="button" @click="selectAnswer('q_health','Insurance through work',4)" :class="answerBtn('q_health','Insurance through work')">Insurance through work</button>
+              <button type="button" @click="selectAnswer('q_health','Marketplace or Private',4)" :class="answerBtn('q_health','Marketplace or Private')">Marketplace or Private Insurance</button>
+              <button type="button" @click="selectAnswer('q_health','Uninsured',4)" :class="answerBtn('q_health','Uninsured')">Uninsured</button>
+              <button type="button" @click="selectAnswer('q_health','Skip',4)" :class="answerBtn('q_health','Skip')">Skip</button>
+            </div>
+            <div class="mt-4 space-y-2 max-h-40 overflow-y-auto p-3 bg-slate-50 rounded border border-slate-200/70 text-[11px] leading-snug text-slate-600">
+              <p><strong>Compliance:</strong> By selecting any of the options above except "Skip," I provide my express written consent via this chat / webform interaction for a representative or licensed sales agent associated with SelectQuote and affiliated entities, Aragon Advertising LLC, Highland Health, AgencyPro, Medicare Health Advisors, Platinum Choice Healthcare, Senior Healthcare Advisors, Seafront Marketing, Americas Health Medigap Life, Prime Medicare Solutions, Benefitlink, DH Insurance, Kaiser, PolicySaver LLC, ProHealth Partners, ClearChoice Health to contact me at 8187142855, even if the phone number provided is on the National Do Not Call registry, regarding products or services, including Medicare Supplement, Medicare Advantage, Prescription Drug insurance plans, and other health-related services via live, automated dialing system telephone call, text, or email. I understand this request has been initiated by me on 8/22/2025 and that this is an unscheduled contact request. I understand my telephone company may impose charges on me for these contacts and am not required to enter into this agreement as a condition of any purchase or service. I further understand that this request, initiated by me is my affirmative consent on 8/22/2025 to be contacted, which is in compliance with all federal and state telemarketing and Do-Not-Call laws. I may revoke consent to contact at any time. Licensed Sales Agents are not connected with or endorsed by the U.S. government or the federal Medicare program. I also acknowledge that I previously agreed to the Terms of Use, including the mandatory arbitration provision. Please note this is a solicitation for insurance. No obligation to enroll. Participating sales agencies represent Medicare Advantage [HMO, PPO and PFFS] organizations and stand-alone PDP Prescription Drug plans that are contracted with Medicare. Enrollment depends on the plan's contract renewal. Enrollment in the described plan type may be limited to certain times of the year unless you qualify for a Special Enrollment Period.</p>
+            </div>
+          </section>
+          <section :class="panelClasses(4)" data-step="4" data-role="question" v-show="quizVersion===1" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">Do you rent or own your home?</h2>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <button type="button" @click="selectAnswer('q_residence','Rent',6)" :class="answerBtn('q_residence','Rent')">Rent</button>
+              <button type="button" @click="selectAnswer('q_residence','Own',5)" :class="answerBtn('q_residence','Own')">Own</button>
+            </div>
+          </section>
+          <section :class="panelClasses(5)" data-step="5" data-next="6" data-role="question" v-show="quizVersion===1" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">Home Improvement Projects</h2>
+            <p class="text-sm text-slate-600">Which of the following home improvement projects are you considering?</p>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <button type="button" @click="toggleProject('windows')" :class="projectBtn('windows')">Windows</button>
+              <button type="button" @click="toggleProject('roofing')" :class="projectBtn('roofing')">Roofing</button>
+              <button type="button" @click="toggleProject('bathroom remodel')" :class="projectBtn('bathroom remodel')">Bathroom Remodel</button>
+              <button type="button" @click="toggleProject('gutter replacement')" :class="projectBtn('gutter replacement')">Gutter Replacement</button>
+              <button type="button" @click="toggleProject('walk in tubs')" :class="projectBtn('walk in tubs')">Walk In Tubs</button>
+              <button type="button" @click="toggleProject('solar')" :class="projectBtn('solar')">Solar</button>
+              <button type="button" @click="toggleProject('none')" :class="projectBtn('none')">None</button>
+            </div>
+            <div class="flex justify-end pt-2"><button type="button" @click="nextStep" class="inline-flex items-center justify-center px-6 py-2.5 rounded-lg font-semibold shadow-sm bg-primary text-white hover:bg-primaryDark focus:outline-none focus:ring-4 focus:ring-primary/30 text-sm">Continue</button></div>
+          </section>
+          <section :class="panelClasses(6)" data-step="6" data-role="search" data-next="7" v-show="quizVersion===1" class="space-y-6 text-center py-20 max-w-xl mx-auto">
+            <h2 class="text-2xl font-semibold tracking-tight">Searching Offers...</h2>
+            <p class="text-sm text-slate-600">We're matching your answers.</p>
+            <div class="max-w-md mx-auto mt-8"><div class="w-full bg-slate-200 rounded h-4 overflow-hidden"><div class="h-full bg-primary transition-all duration-300" :style="{width: searchProgress + '%'}"></div></div><p class="mt-2 text-sm text-slate-500">{{ searchProgress }}%</p></div>
+          </section>
+          <section :class="panelClasses(7)" data-step="7" data-role="complete" v-show="quizVersion===1" class="space-y-6 text-center py-16">
+            <h2 class="text-3xl font-bold tracking-tight text-primary">You're All Set!</h2>
+            <p class="text-sm text-slate-600 max-w-md mx-auto">Thanks. We've logged your answers.</p>
+            <button type="button" @click="restart" class="inline-flex items-center justify-center px-6 py-2.5 rounded-lg font-medium bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-primary/20 transition">Restart</button>
+          </section>
+          <!-- ALT QUIZ 2 -->
+          <section :class="panelClasses(1)" data-step="1" data-next="2" data-role="question" v-show="quizVersion===2" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">Are you feeling lucky?</h2>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <button type="button" @click="selectAnswer('q2_lucky','Yes',2)" :class="answerBtn('q2_lucky','Yes')">Yes</button>
+              <button type="button" @click="selectAnswer('q2_lucky','No',2)" :class="answerBtn('q2_lucky','No')">No</button>
+            </div>
+          </section>
+          <section :class="panelClasses(2)" data-step="2" data-next="3" data-role="question" v-show="quizVersion===2" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">Do you have an active checking account?</h2>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <button type="button" @click="selectAnswer('q2_checking','Yes',3)" :class="answerBtn('q2_checking','Yes')">Yes</button>
+              <button type="button" @click="selectAnswer('q2_checking','No',3)" :class="answerBtn('q2_checking','No')">No</button>
+            </div>
+          </section>
+          <section :class="panelClasses(3)" data-step="3" data-next="5" data-role="question" v-show="quizVersion===2" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <div class="flex items-center justify-between"><h2 class="text-2xl font-semibold tracking-tight">Employment Status</h2><button type="button" @click="nextStepOverride=4; nextStep();" class="text-[11px] underline text-primary/70 hover:text-primary">Health (Optional)</button></div>
+            <p class="text-sm text-slate-600">What is your employment status?</p>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <button type="button" @click="selectAnswer('q2_employment','Full Time',5)" :class="answerBtn('q2_employment','Full Time')">Full Time</button>
+              <button type="button" @click="selectAnswer('q2_employment','Part Time',5)" :class="answerBtn('q2_employment','Part Time')">Part Time</button>
+              <button type="button" @click="selectAnswer('q2_employment','Unemployed',5)" :class="answerBtn('q2_employment','Unemployed')">Unemployed</button>
+              <button type="button" @click="selectAnswer('q2_employment','On Disability',5)" :class="answerBtn('q2_employment','On Disability')">On Disability</button>
+              <button type="button" @click="selectAnswer('q2_employment','Other',5)" :class="answerBtn('q2_employment','Other')">Other</button>
+            </div>
+          </section>
+          <section :class="panelClasses(4)" data-step="4" data-next="5" data-role="question" v-show="quizVersion===2" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">Health Insurance Coverage (Optional)</h2>
+            <p class="text-sm text-slate-600">Which best describes your Health Insurance coverage?</p>
+            <p class="text-xs text-slate-500">Click to be connected with a licensed sales agent to check your eligibility to enroll and to review your Medicare Advantage plan options.</p>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <button type="button" @click="selectAnswer('q2_health','Medicare',5)" :class="answerBtn('q2_health','Medicare')">Medicare</button>
+              <button type="button" @click="selectAnswer('q2_health','Medicaid',5)" :class="answerBtn('q2_health','Medicaid')">Medicaid</button>
+              <button type="button" @click="selectAnswer('q2_health','Medicare & Medicaid',5)" :class="answerBtn('q2_health','Medicare & Medicaid')">Medicare & Medicaid</button>
+              <button type="button" @click="selectAnswer('q2_health','Insurance through work',5)" :class="answerBtn('q2_health','Insurance through work')">Insurance through work</button>
+              <button type="button" @click="selectAnswer('q2_health','Marketplace or Private',5)" :class="answerBtn('q2_health','Marketplace or Private')">Marketplace or Private Insurance</button>
+              <button type="button" @click="selectAnswer('q2_health','Uninsured',5)" :class="answerBtn('q2_health','Uninsured')">Uninsured</button>
+              <button type="button" @click="selectAnswer('q2_health','Skip',5)" :class="answerBtn('q2_health','Skip')">Skip</button>
+            </div>
+          </section>
+          <section :class="panelClasses(5)" data-step="5" data-role="question" v-show="quizVersion===2" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">Do you rent or own your home?</h2>
+            <div class="grid sm:grid-cols-2 gap-3"><button type="button" @click="selectAnswer('q2_residence','Rent',6)" :class="answerBtn('q2_residence','Rent')">Rent</button><button type="button" @click="selectAnswer('q2_residence','Own',7)" :class="answerBtn('q2_residence','Own')">Own</button></div>
+          </section>
+          <section :class="panelClasses(6)" data-step="6" data-next="7" data-role="question" v-show="quizVersion===2 && form.answers.q2_residence==='Rent'" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">How many cars are in your household?</h2>
+            <div class="grid sm:grid-cols-2 gap-3"><button type="button" @click="selectAnswer('q2_cars','1',7)" :class="answerBtn('q2_cars','1')">1</button><button type="button" @click="selectAnswer('q2_cars','2',7)" :class="answerBtn('q2_cars','2')">2</button><button type="button" @click="selectAnswer('q2_cars','3+',7)" :class="answerBtn('q2_cars','3+')">3+</button><button type="button" @click="selectAnswer('q2_cars','None',7)" :class="answerBtn('q2_cars','None')">None</button></div>
+          </section>
+          <section :class="panelClasses(7)" data-step="7" data-next="8" data-role="question" v-show="quizVersion===2" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">Auto Accident (Last 12 Months)</h2>
+            <p class="text-sm text-slate-600">Were you hurt in an auto accident that was someone else's fault in the last 12 months? (MVA offer)</p>
+            <p class="text-xs text-slate-500 font-medium">*You may be entitled to FINANCIAL COMPENSATION! Click "Yes", per the terms below, if you received medical treatment for your injuries and still need a lawyer to represent you!</p>
+            <div class="grid sm:grid-cols-2 gap-3"><button type="button" @click="selectAnswer('q2_mva','Yes',8)" :class="answerBtn('q2_mva','Yes')">Yes</button><button type="button" @click="selectAnswer('q2_mva','No',8)" :class="answerBtn('q2_mva','No')">No</button></div>
+            <div class="mt-4 space-y-2 max-h-40 overflow-y-auto p-3 bg-slate-50 rounded border border-slate-200/70 text-[11px] leading-snug text-slate-600">
+              <p><strong>Disclaimer:</strong> *AGREEMENT TO BE CONTACTED: By selecting "Yes", I am providing my ESIGN signature and written consent to Liberty Aid Network, DV Injury Marketing, DV Injury Law, The Accident Office, Top Law Assist, A P.C., Car Accident Helpline, AccidentHelpersHQ, Auto Claim Center, Lerner and Rowe to call or text me on the number I provided 7184432748 about legal services via manual or automated dialing and prerecorded or artificial voice (including AI) technology, until such time that I revoke my consent. Consent is not a requirement to continue on this website, and you can click "No" to proceed without providing consent. I also acknowledge that I previously agreed to the Terms of Use, including the mandatory arbitration provision</p>
+            </div>
+          </section>
+          <section :class="panelClasses(8)" data-step="8" data-next="9" data-role="question" v-show="quizVersion===2" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">Continuing Education</h2>
+            <p class="text-sm text-slate-600">Are you interested in continuing your education?</p>
+            <div class="grid sm:grid-cols-2 gap-3"><button type="button" @click="selectAnswer('q2_education','Yes',9)" :class="answerBtn('q2_education','Yes')">Yes</button><button type="button" @click="selectAnswer('q2_education','No',9)" :class="answerBtn('q2_education','No')">No</button></div>
+          </section>
+          <section :class="panelClasses(9)" data-step="9" data-next="10" data-role="question" v-show="quizVersion===2" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">Struggling With Pain?</h2>
+            <p class="text-sm text-slate-600">Make Under $40k & on Medicaid? Powerful Treatment Available!</p>
+            <p class="text-xs text-slate-500 font-medium">*CLICK "YES" TO RECEIVE A CALL ABOUT POWERFUL TREATMENT TODAY, per the terms below*!</p>
+            <div class="grid sm:grid-cols-2 gap-3"><button type="button" @click="selectAnswer('q2_pain','YES',10)" :class="answerBtn('q2_pain','YES')">YES</button><button type="button" @click="selectAnswer('q2_pain','NO',10)" :class="answerBtn('q2_pain','NO')">NO</button></div>
+            <div class="mt-4 space-y-2 max-h-40 overflow-y-auto p-3 bg-slate-50 rounded border border-slate-200/70 text-[11px] leading-snug text-slate-600">
+              <p><strong>*AGREEMENT TO BE CONTACTED:</strong> By selecting "YES", I am providing my ESIGN signature and written consent to Urgent Care Online to call or text me on the number I provided 7184432748 about Medicaid Products and/or Services via manual or automated dialing and prerecorded or artificial voice (including AI) technology, until such time that I revoke my consent. Consent is not a requirement to continue on this website, and you can click "No" to proceed without providing consent. I also acknowledge that I previously agreed to the Terms & Conditions, including the mandatory arbitration provision.</p>
+            </div>
+          </section>
+          <section :class="panelClasses(10)" data-step="10" data-next="11" data-role="question" v-show="quizVersion===2" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">Prescription Medications</h2>
+            <p class="text-sm text-slate-600">Do you take 7 or more prescription medications?</p>
+            <p class="text-xs text-slate-500">* There's an easier, more convenient way to manage your medications! Enjoy home delivery, your pills sorted and packaged by time and day, and help with refills. This is all provided at no extra charge – you pay only for your insurance copayments. Click yes below to receive a call to learn more per the terms below.</p>
+            <div class="grid sm:grid-cols-2 gap-3"><button type="button" @click="selectAnswer('q2_rx','YES',11)" :class="answerBtn('q2_rx','YES')">YES</button><button type="button" @click="selectAnswer('q2_rx','NO',11)" :class="answerBtn('q2_rx','NO')">NO</button></div>
+            <div class="mt-4 space-y-2 max-h-40 overflow-y-auto p-3 bg-slate-50 rounded border border-slate-200/70 text-[11px] leading-snug text-slate-600">
+              <p><strong>*AGREEMENT TO BE CONTACTED:</strong> By clicking "Yes", I am providing my electronic signature and express written consent and agreement to permit ExactCare Pharmacy, and parties calling on its behalf, to contact me at the number provided 7184432748 for marketing purposes, even if that number is presently on any local, state or national Do Not Call list. I consent to these telephone calls being monitored or recorded. I understand that my telephone company may impose charges on me for these contacts. I understand that these calls may be made by individuals or through the use of automated technology, SMS/MMS messages, AI generative voice and prerecorded and/or artificial voice messages and approve the same. I understand that my consent is not required as a precondition for purchasing or receiving any property, goods or service. I agree to be contacted until my consent is clearly revoked, and I understand consent can be revoked in any reasonable manner, including by calling ExactCare Pharmacy at 844-287-1609.</p>
+              <p>I also acknowledge that I previously agreed to the Terms and Conditions, including the mandatory arbitration provision.</p>
+              <p class="mt-2">There's an easier, more convenient way to manage your medications! Enjoy home delivery, your pills sorted and packaged by time and day, and help with refills. This is all provided at no extra charge – you pay only for your insurance copayments. Click yes below to receive a call to learn more per the terms below.</p>
+            </div>
+          </section>
+          <section :class="panelClasses(11)" data-step="11" data-next="12" data-role="question" v-show="quizVersion===2" class="space-y-6 bg-white/90 rounded-xl shadow-sm ring-1 ring-slate-200/70 p-5 sm:p-8">
+            <h2 class="text-2xl font-semibold tracking-tight">Veterans & Savings</h2>
+            <p class="text-sm text-slate-600">Veterans: Get Up to $3,600/mo Tax-Free</p>
+            <p class="text-sm text-slate-600">You EARNED these VA benefits. Takes 60 seconds to see if you qualify</p>
+            <p class="text-xs text-slate-500 mt-4">Since 2024, auto insurance rates have surged 12%. Are you overpaying for your insurance?</p>
+            <div class="flex justify-end pt-2"><button type="button" @click="nextStep" class="inline-flex items-center justify-center px-6 py-2.5 rounded-lg font-semibold shadow-sm bg-primary text-white hover:bg-primaryDark focus:outline-none focus:ring-4 focus:ring-primary/30 text-sm">Continue</button></div>
+          </section>
+          <section :class="panelClasses(12)" data-step="12" data-role="search" data-next="13" v-show="quizVersion===2" class="space-y-6 text-center py-20 max-w-xl mx-auto">
+            <h2 class="text-2xl font-semibold tracking-tight">Matching Offers...</h2>
+            <div class="max-w-md mx-auto mt-8"><div class="w-full bg-slate-200 rounded h-4 overflow-hidden"><div class="h-full bg-primary transition-all duration-300" :style="{width: searchProgress + '%'}"></div></div><p class="mt-2 text-sm text-slate-500">{{ searchProgress }}%</p></div>
+          </section>
+          <section :class="panelClasses(13)" data-step="13" data-role="complete" v-show="quizVersion===2" class="space-y-6 text-center py-16">
+            <h2 class="text-3xl font-bold tracking-tight text-primary">Completed!</h2>
+            <p class="text-sm text-slate-600 max-w-md mx-auto">Your responses are recorded.</p>
+            <button type="button" @click="restart" class="inline-flex items-center justify-center px-6 py-2.5 rounded-lg font-medium bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-primary/20 transition">Restart</button>
+          </section>
+        </div>
+      </form>
+      </form>
+    </main>
+
+    <footer class="py-10 text-center text-xs text-slate-500">
+      &copy; <span>{{ new Date().getFullYear() }}</span> Offer Finder. All rights reserved.
+    </footer>
+  </div>
+
+  <script>
+    // Placeholder: Replace with your real address API key / provider.
+    const ADDRESS_API_KEY = 'YOUR_API_KEY';
+
+  const app = Vue.createApp({
+      data() {
+        return {
+          step: 1,
+          form: { answers: {} },
+          // No dynamic questions array (fully pre-rendered)
+          isSearching: false,
+          searchProgress: 0,
+          searchTimer: null,
+          suggestions: [],
+          suggestionTimer: null,
+          errors: {},
+          interacted: {},
+          touched: {},
+          nextStepOverride: null,
+          quizVersion: 1,
+          maxStep: 7
+        };
+      },
+    computed: {
+      progressPercent() {
+        const total = this.lastQuestionStep;
+        return Math.min(100, (this.step-1)/total*100);
+      },
+      lastQuestionStep() { return this.quizVersion===1 ? 5 : 11; }
+    },
+      methods: {
+        panelClasses(n) {
+          const base = 'step-panel';
+          const sec = document.querySelector(`section[data-step='${n}']`);
+          const role = sec && sec.dataset.role ? sec.dataset.role : 'question';
+          const roleClass = ' ' + role;
+          if (this.step === n) return base + ' active' + roleClass;
+          return base + (n < this.step ? ' before' : ' after') + roleClass;
+        },
+  touch() {},
+        buttonClass(disabled) {
+          const base = 'inline-flex items-center justify-center px-6 py-2.5 rounded-lg font-semibold shadow-sm focus:outline-none focus:ring-4 transition text-sm tracking-wide';
+          const enabled = 'bg-primary text-white hover:bg-primaryDark active:scale-[.98] focus:ring-primary/30';
+          const disabledCls = 'bg-primary/50 text-white cursor-not-allowed focus:ring-transparent';
+          return [base, disabled ? disabledCls : enabled].join(' ');
+        },
+  validateStep() { return true; },
+        nextStep() {
+          // Validate only for first 3 data steps
+          if (!this.validateStep()) return;
+          // Branching override (set when selecting answers)
+          if (this.nextStepOverride) {
+            const target = this.nextStepOverride;
+            this.nextStepOverride = null;
+            this.handleStepTransition(target);
+            return;
+          }
+          // DOM-specified next step (data-next) if present
+          const sec = document.querySelector(`section[data-step='${this.step}']`);
+          let domNext = sec && sec.dataset.next ? parseInt(sec.dataset.next,10) : null;
+          if (domNext && domNext !== this.step) {
+            this.handleStepTransition(domNext);
+            return;
+          }
+          if (this.step < this.maxStep) this.handleStepTransition(this.step + 1);
+        },
+        handleStepTransition(target) {
+          const secTarget = document.querySelector(`section[data-step='${target}']`);
+            if (secTarget && secTarget.dataset.role === 'search') {
+              this.step = target;
+              this.beginSearchAnimation(target);
+            } else {
+              this.step = target;
+            }
+        },
+        prevStep() {
+          if (this.step > 1) {
+            // can't go back during active search animation (step 7 mid-progress)
+            if (this.step === 9 && this.searchProgress>0 && this.searchProgress<100) return;
+            this.step--;
+          }
+        },
+        selectAnswer(qid, opt, nextStep) {
+          this.form.answers[qid] = opt;
+          // Legacy branching removed here; explicit nextStep passed per button now.
+          if (nextStep) {
+            this.nextStepOverride = nextStep;
+            // Auto-advance after short delay for smoother UX
+            setTimeout(()=> this.nextStep(), 120);
+          }
+        },
+        toggleProject(tag) {
+          if (!this.form.answers.q_projects) this.form.answers.q_projects = [];
+          const arr = this.form.answers.q_projects;
+          if (tag === 'none') {
+            this.form.answers.q_projects = ['none'];
+            return;
+          }
+            const idx = arr.indexOf(tag);
+            if (idx>=0) arr.splice(idx,1); else {
+              // remove 'none' if present
+              const noneIdx = arr.indexOf('none');
+              if (noneIdx>=0) arr.splice(noneIdx,1);
+              arr.push(tag);
+            }
+        },
+        answerBtn(qid,val) {
+          const active = this.selectedAnswer(qid) === val;
+          return [
+            'rounded-lg border px-4 py-3 text-left text-sm font-medium transition focus:outline-none focus:ring-4 focus:ring-primary/30',
+            active ? 'bg-primary text-white border-primaryDark shadow-sm' : 'bg-white/80 hover:border-primary hover:bg-primary/5 border-slate-300'
+          ].join(' ');
+        },
+        projectBtn(val) {
+          const arr = this.form.answers.q_projects || [];
+          const active = arr.includes(val);
+          return [
+            'rounded-lg border px-4 py-2 text-left text-xs font-medium transition focus:outline-none focus:ring-4 focus:ring-primary/30',
+            active ? 'bg-primary text-white border-primaryDark shadow-sm' : 'bg-white/80 hover:border-primary hover:bg-primary/5 border-slate-300'
+          ].join(' ');
+        },
+        selectedAnswer(qid) { return this.form.answers[qid]; },
+        beginSearchAnimation(stepId) {
+          this.searchProgress = 0;
+          if (this.searchTimer) clearInterval(this.searchTimer);
+          this.searchTimer = setInterval(() => {
+            if (this.searchProgress < 100) this.searchProgress += Math.floor(Math.random()*10)+5;
+            if (this.searchProgress >= 100) {
+              this.searchProgress = 100;
+              clearInterval(this.searchTimer);
+              // Find next after search via data-next or increment
+              setTimeout(()=> {
+                const s = document.querySelector(`section[data-step='${stepId}']`);
+                let nxt = s && s.dataset.next ? parseInt(s.dataset.next,10) : (stepId + 1);
+                this.step = nxt;
+              }, 600);
+            }
+          }, 400);
+        },
+  onAddressInput() {}, fetchAddressSuggestions() {},
+        restart() {
+          this.step = 1;
+          this.form = { answers:{} };
+          this.errors = {};
+          this.interacted = {};
+          this.touched = {};
+          this.nextStepOverride = null;
+        },
+        onSubmit() { /* All handled inline; could post via fetch here. */ }
+      },
+  mounted() {
+        // Determine quiz version from query (?quiz=2)
+        const params = new URLSearchParams(location.search);
+        const qv = params.get('quiz');
+  if (qv === '2') { this.quizVersion = 2; this.maxStep = 13; } else { this.quizVersion = 1; this.maxStep = 7; }
+        // Optionally wait for external certification scripts to populate hidden inputs.
+        // Poll for tokens.
+        const poll = setInterval(()=> {
+          const tf = document.getElementById('xxTrustedFormToken');
+          const lid = document.getElementById('universal_leadid');
+          if (tf && tf.value) this.form.xxTrustedFormToken = tf.value;
+          if (lid && lid.value) this.form.universal_leadid = lid.value;
+        }, 1000);
+        setTimeout(()=> clearInterval(poll), 20000);
+      }
+    });
+
+    // Global button utility classes
+    app.mixin({
+      created() {
+        // inject style utilities once
+      }
+    });
+
+  app.mount('#app');
+  </script>
+
+  <script>
+    // TrustedForm Script (Replace parameters with your production values)
+    // (function() {
+    //   var tf = document.createElement('script'); tf.type = 'text/javascript'; tf.async = true;
+    //   // submit_button can be an actual button ID if you prefer capturing on submit
+    //   tf.src = 'https://api.trustedform.com/trustedform.js?field=xxTrustedFormToken';
+    //   var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(tf, s);
+    // })();
+  </script>
+  <script>
+    // Jornaya / LeadiD Script (Replace with your campaign script URL)
+    // (function() {
+    //   var s=document.createElement('script'); s.id='LeadiDscript_campaign'; s.type='text/javascript'; s.async=true;
+    //   s.src='https://create.lidstatic.com/campaign/YOUR_CAMPAIGN.js?snippet_version=2';
+    //   var e=document.getElementsByTagName('script')[0]; e.parentNode.insertBefore(s,e);
+    // })();
+  </script>
+  <!-- <noscript><img src="https://create.leadid.com/noscript.gif?lac=YOUR_LAC&lck=YOUR_LCK&snippet_version=2" alt="" /></noscript> -->
+
+  <script>
+  // Removed old @apply based utility (not processed in CDN mode). Using inline utility classes instead.
+  </script>
+</body>
+</html>

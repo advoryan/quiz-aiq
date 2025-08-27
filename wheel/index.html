@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recommendation Spin Game</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+        /* Colors */
+        --color-bg: #f0f0f0;
+        --backdrop-bg: rgba(0,0,0,0.2);
+        --color-text: #333;
+        --color-white: #ffffff;
+        --color-border: #ddd;
+        --color-accent: #ff6200;
+        --color-disabled: #ccc;
+        --color-label-bg: #f77321;
+        --backdrop-bg: rgba(0,0,0,0.5);
+        --shadow-soft: rgba(0,0,0,0.2);
+        --shadow-strong: rgba(0,0,0,0.5);
+        --color-wheel-border: #ffffff;
+        --modal-accent-bg: #f77321;
+        --color-green: #28a745;
+
+        /* Typography */
+        --font-family: Arial, sans-serif;
+        --font-size-base: 16px;
+        --font-size-button: 18px;
+        --font-size-h2: 24px;
+        --font-size-h1: 46px;
+
+        /* Radii */
+        --radius-button: 5px;
+        --radius-modal: 12px;
+        --radius-input: 6px;
+
+        /* Sizes and layout */
+        --wheel-size: 320px;
+        --modal-max-width: 420px;
+        --modal-content-max-width: 320px;
+        --spacing-xs: 5px;
+    }
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        font-family: var(--font-family);
+        background-color: var(--color-bg);
+        background-image: url(./won-bg.webp);
+        background-size: cover;
+        background-position: center;
+    }
+    #wheel-container {
+        position: relative;
+        width: var(--wheel-size);
+        height: var(--wheel-size);
+    }
+    #wheel {
+        width: 100%;
+        height: 100%;
+        transition: transform 3s ease-out;
+        border-radius: 50%;
+        border: var(--color-wheel-border) solid 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    #wheel-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 50%;
+      filter: drop-shadow(0 2px 20px var(--shadow-strong));
+    }
+    /* Pointer indicator at the top */
+    .pointer {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translate(-31px, -15px) rotate3d(0, 0, 1, -67deg);
+        width: 0;
+        height: 0;
+        border-left: 35px solid transparent;
+        border-right: 15px solid transparent;
+        border-bottom: 35px solid var(--color-accent);
+        filter: drop-shadow(0 2px 5px var(--shadow-strong));
+        z-index: 2;
+    }
+    #spin-button {
+        margin-top: 30px;
+        padding: 10px 20px;
+        font-size: 30px;
+        font-weight: 700;
+        cursor: pointer;
+        background: linear-gradient(135deg, #f5af19 0%, #f12711 100%);
+        color: var(--color-white);
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        box-shadow: 0 10px 20px 1px var(--shadow-strong);
+        animation: pulse 1s infinite;
+    }
+    #spin-button:active {
+      box-shadow: 0 5px 20px 1px var(--shadow-strong);
+      scale: 0.95;
+    }
+    #spin-button:disabled {
+        background-color: var(--color-disabled);
+        cursor: not-allowed;
+        animation: none;
+    }
+    /* Modal styles (custom names to avoid Bootstrap conflicts) */
+    .spinner-backdrop {
+      position: fixed;
+      inset: 0;
+      background: var(--backdrop-bg);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 250ms ease-out;
+    }
+    .spinner-backdrop.active {
+      display: flex;
+      opacity: 1;
+    }
+    .spinner-modal {
+      background: var(--color-white);
+      width: 90%;
+      max-width: var(--modal-max-width);
+      border-radius: var(--radius-modal);
+      padding: 20px;
+      box-shadow: 0 10px 30px var(--shadow-soft);
+      transform: scale(0.9) rotate(-8deg);
+      will-change: transform, opacity;
+      position: relative; /* for inner background layering */
+      background: var(--modal-accent-bg);
+    }
+    /* Pop + Spin in animation */
+    @keyframes popSpinIn {
+      0% { transform: scale(0.4) rotate(-90deg); opacity: 0; }
+      60% { transform: scale(1.06) rotate(10deg); opacity: 1; }
+      80% { transform: scale(0.98) rotate(-3deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); background-color: var(--color-accent); }
+      50% { transform: scale(1.05); background-color: #ffe65e; }
+      100% { transform: scale(1); background-color: var(--color-accent); }
+    }
+
+    .spinner-modal.pop-spin-in {
+      animation: popSpinIn 1520ms cubic-bezier(.2,.8,.2,1) both;
+      padding: 20px;
+      box-shadow: 0 10px 30px var(--shadow-soft);
+    }
+    .spinner-modal h2 { margin: 0 0 8px; font-size: var(--font-size-h2); }
+    .spinner-modal p { margin: 0 0 16px; color: var(--color-text); }
+    .spinner-modal form { display: grid; gap: 10px; }
+    .spinner-modal label { font-size: var(--font-size-base); color: var(--color-text); }
+    .spinner-modal input {
+      padding: 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-input);
+      font-size: var(--font-size-base);
+    }
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+    }
+    .btn {
+        padding: 10px 14px;
+        border: none;
+        border-radius: var(--radius-input);
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .btn.primary { 
+      background: var(--color-accent); 
+      color: var(--color-white);
+      border: 3px solid var(--color-bg);
+      border-radius: 10px;
+      font-size: var(--font-size-button);
+      box-shadow: 0 2px 10px var(--shadow-strong);
+      animation: pulse 1s infinite;
+    }
+    .btn.ghost { 
+      background: var(--color-bg); 
+      color: var(--color-text); 
+    }
+
+    /* Confetti canvas overlay */
+    #confetti-canvas {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 9;
+    }
+    /* Modal decorative background behind content */
+    .modal2-background {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      border-radius: var(--radius-modal);
+    }
+    .modal2-bg-layer {
+      position: absolute;
+      inset: -20%;
+      opacity: 0.8;
+    }
+    .modal2-background svg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 160%;
+      height: 160%;
+      transform: translate(-50%, -50%) rotate(-20deg);
+      filter: drop-shadow(0 2px 8px var(--shadow-soft));
+    }
+    .modal2-content {
+      position: relative;
+      z-index: 1;
+    }
+    .modal2-content .modal-actions {
+      margin-bottom: 10px;
+    }
+    .modal2-content button[type="submit"] {
+      font-size: 24px;
+      /* background: linear-gradient(135deg, #f12711 0%, #f5af19 100%); */
+      border: 3px solid var(--color-bg);
+      border-radius: 10px;
+      box-shadow: 0 2px 15px 4px var(--shadow-strong);
+    }
+    .modal2-content button[type="submit"]:disabled {
+      background: var(--color-border);
+      color: var(--color-text);
+      cursor: not-allowed;
+    }
+    .modal2-content button[type="submit"]:not(:disabled) {
+      background: linear-gradient(135deg, #9430ad 0%, #c044df 100%);
+      animation: pulse 1s infinite;
+    }
+    .modal2-content button[type="submit"]:hover {
+      filter: saturate(1.2);
+    }
+    /* Bootstrap floating labels layout inside orange modal */
+    .claim-form { display: flex; flex-direction: column; align-items: center; }
+    .claim-form .form-floating { width: 100%; margin-bottom: 12px; }
+    .claim-form .form-control { background: var(--color-white); color: var(--color-text); box-shadow: inset 1px 1px 2px 0px var(--shadow-strong); padding-left: 20px;  padding-right: 20px; }
+    .claim-form .form-floating>label { color: rgba(0,0,0,0.6); padding-left: 20px; padding-right: 20px; }
+    .modal-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .modal2-label {
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: var(--color-border) 3px solid;
+      z-index: 1999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 2px 10px var(--shadow-strong);
+    }
+    .modal2-label img {
+      width: 150px;
+      height: 120px;
+    }
+    .claim-form--field label {
+      vertical-align: middle;
+      display: inline-block;
+      color: var(--color-white)!important;
+      background-color: var(--color-label-bg);
+      height: 38.91px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0 10px;
+      /* border-radius: 6px 0 0 6px; */
+      /* border-left: 1px solid var(--color-border);
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border); */
+      font-size: var(--font-size-base);
+    }
+    .spinner-modal input {
+      font-size: var(--font-size-base);
+      width: 100%;
+      /* border-radius: 0 var(--radius-input) var(--radius-input) 0; */
+      border: none;
+    }
+    .claim-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .claim-form--field {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 2px 10px var(--shadow-strong);
+      border-radius: 6px;
+      width: 100%;
+    }
+    #claim-title {
+      font-size: var(--font-size-h1);
+      color: var(--color-white);
+      margin-bottom: 16px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9));
+      padding: 5px 20px;
+    }
+    label:after {background-color: transparent!important;}
+
+    .wheel-logo {
+      position: absolute;
+      top: -70px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 130px;
+      height: 60px;
+      z-index: 1000;
+      border-radius: 20px;
+      border: 3px solid var(--color-border);
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 2px 10px var(--shadow-strong);
+    }
+    .wheel-logo img {
+      width: 140%;
+      height: 200%;
+    }
+  </style>
+</head>
+<body>
+  <div id="wheel-container">
+    <div class="wheel-logo">
+      <img src="./fortune-wheel.webp" alt="Fortune Wheel" srcset="">
+    </div>
+    <div class="pointer"></div>
+    <div id="wheel">
+      <canvas id="wheel-canvas"></canvas>
+    </div>
+  </div>
+  <button id="spin-button">Spin to Win!</button>
+
+  <!-- Confetti -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Claim Modal -->
+  <div id="claim-backdrop" class="spinner-backdrop" aria-hidden="true">
+    <div class="spinner-modal" role="dialog" aria-modal="true" aria-labelledby="claim-title">
+
+      <div class="modal2-label">
+        <img src="won.webp" alt="Prize Image" srcset="">
+      </div>
+
+      <div class="modal2-background">
+        <div class="modal2-bg-layer">
+          <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1003.97 1009.5">
+            <defs>
+              <style>.cls-1{fill-rule:evenodd;fill:url(#radial-gradient);}</style>
+              <radialGradient id="radial-gradient" cx="615.23" cy="557.75" r="503.37" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#FEE860" stop-opacity="1"/>
+                <stop offset="0.8" stop-color="#FFE357" stop-opacity="0.2"/>
+              </radialGradient>
+            </defs>
+            <path class="cls-1" d="M615.23,53V557.75L510.29,64ZM318.54,149.4,615.23,557.75,409.93,96.64Zm-140.44,156L615.23,557.75,240.13,220ZM113.24,505l502,52.76-480-156Zm21.94,208.74,480.05-156-502,52.76Zm105,181.76,375.1-337.74L178.1,810.13Zm169.8,123.37,205.3-461.11L318.54,966.1Zm205.3,43.64V557.75L510.29,1051.47Zm205.3-43.64L615.23,557.75l104.94,493.72Zm169.8-123.37L615.23,557.75,911.91,966.1Zm104.94-181.76-480-156,437.13,252.38ZM1117.21,505l-502,52.76,502,52.76Zm-64.85-199.62L615.23,557.75l480-156Zm-140.45-156L615.23,557.75,990.33,220ZM720.17,64,615.23,557.75,820.53,96.64Z" transform="translate(-113.24 -53)"/>
+          </svg>
+
+        </div>
+      </div>
+
+      <div class="modal2-content">
+        <br>
+        <br>
+        <br>
+        <p id="claim-prize-text">Prize: ...</p>
+        <form id="claim-form" class="claim-form">
+          <div class="form-floating mb-2">
+            <input id="email" name="email" type="email" class="form-control" placeholder="Email" required>
+            <label for="email">Email address</label>
+          </div>
+          <div class="form-floating mb-2">
+            <input id="phone" name="phone" type="tel" class="form-control" placeholder="Phone" pattern="[0-9+()\-\s]{7,}" required>
+            <label for="phone">Phone</label>
+          </div>
+          <div class="form-floating mb-2">
+            <input id="zip" name="zip" type="text" class="form-control" placeholder="ZIP" pattern="[A-Za-z0-9\-\s]{3,10}" required>
+            <label for="zip">ZIP</label>
+          </div>
+          <div class="modal-actions">
+            <button type="submit" id="claim-submit" class="btn btn-primary" disabled>Claim prize</button>
+            <button type="button" id="close-modal" class="btn btn-secondary d-none">Close</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Claim Status (3rd modal - Bootstrap) -->
+  <div class="modal fade" id="claimStatusModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background: var(--color-green); border-radius: var(--radius-modal);">
+        <div class="modal-body" style="position:relative;">
+          <div class="modal2-label" style="border-radius: 50%!important;">
+            <img style="width: 150px; height: 135px;" src="./done.webp" alt="Done">
+          </div>
+          <div class="modal2-content" style="text-align:center; padding-top:40px;">
+            <br><br><br>
+            <h2 id="status-title" style="color: #f0f0f0; font-weight: 700; font-size: 36px;">Congratulations!</h2>
+            <p style="color: #f0f0f0;">We received your information and will contact you shortly!</p>
+          </div>
+        </div>
+        <div class="modal-footer" style="justify-content:center; border-top:none;">
+          <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secondary Modal (pre-rendered) -->
+  <div id="secondary-backdrop" class="spinner-backdrop" aria-hidden="true">
+    <div class="spinner-modal" role="dialog" aria-modal="true" aria-labelledby="secondary-title">
+      <h2 id="secondary-title">Special offer</h2>
+      <p id="secondary-text">Don’t miss out on this limited-time deal.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn primary" id="secondary-ok">OK</button>
+        <button type="button" class="btn ghost" id="secondary-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JS (for Bootstrap modal) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>    
+    const wheel = document.getElementById('wheel');
+    const wheelCanvas = document.getElementById('wheel-canvas');
+    const wctx = wheelCanvas.getContext('2d');
+    const spinButton = document.getElementById('spin-button');
+    const backdrop = document.getElementById('claim-backdrop');
+    const prizeTextEl = document.getElementById('claim-prize-text');
+    const closeModalBtn = document.getElementById('close-modal');
+    const claimSubmitBtn = document.getElementById('claim-submit');
+    const claimForm = document.getElementById('claim-form');
+    const claimStatusModalEl = document.getElementById('claimStatusModal');
+    const claimStatusModal = claimStatusModalEl ? new bootstrap.Modal(claimStatusModalEl) : null;
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    // Secondary modal refs
+    const secondaryBackdrop = document.getElementById('secondary-backdrop');
+    const secondaryCloseBtn = document.getElementById('secondary-close');
+    const secondaryOkBtn = document.getElementById('secondary-ok');
+
+    // Configure your 12 section labels here (editable)
+    const prizes = [
+      '$100 Shein Gift Card',
+      'Nice Try x3',
+      '$500 Target Gift Card',
+      '$1000 Paypal',
+      'Free Netflix For 1 YEAR',
+      '$100 Amazon Gift Card',
+      'Free T-Mobile',
+      'No Luck Today',
+      'Almost!',
+    ];
+    const colors = ['#057ACD','#0095FF','#72665d','#64b5f6','#1D3665','#00B800'];
+
+    let isSpinning = false;
+    let currentAngle = 20; // Keep the wheel where it stopped
+    let spinUsed = false;
+    
+    // Configuration for final stop position
+    // Set this to force the wheel to stop on a specific prize index (0-based)
+    // Set to null for random selection based on existing logic
+    let forcedStopIndex = 4;
+    
+    // Function to set the final stop position
+    function setFinalStopIndex(index) {
+      if (index === null || (index >= 0 && index < prizes.length)) {
+        forcedStopIndex = index;
+        console.log(`Final stop set to: ${index === null ? 'random selection' : `index ${index} (${prizes[index]})`}`);
+      } else {
+        console.error(`Invalid index ${index}. Must be null or between 0 and ${prizes.length - 1}`);
+      }
+    }
+    
+    // Function to get prize index by name (case insensitive)
+    function setPrizeByName(prizeName) {
+      const index = prizes.findIndex(prize => 
+        prize.toLowerCase().includes(prizeName.toLowerCase())
+      );
+      if (index !== -1) {
+        setFinalStopIndex(index);
+      } else {
+        console.error(`Prize "${prizeName}" not found. Available prizes:`, prizes);
+      }
+    }
+    
+    // Expose functions globally for easy access
+    window.setFinalStopIndex = setFinalStopIndex;
+    window.setPrizeByName = setPrizeByName;
+    window.getPrizes = () => [...prizes]; // Return copy of prizes array
+
+      // --- Canvas wheel rendering (no SVG) ---
+    function drawWheel(labels) {
+      const n = labels.length;
+      const anglePer = (Math.PI * 2) / n;
+      // Fit canvas to element with devicePixelRatio for crispness
+      const size = Math.min(wheel.clientWidth, wheel.clientHeight);
+      const dpr = window.devicePixelRatio || 1;
+      wheelCanvas.width = Math.max(1, Math.floor(size * dpr));
+      wheelCanvas.height = Math.max(1, Math.floor(size * dpr));
+      wheelCanvas.style.width = size + 'px';
+      wheelCanvas.style.height = size + 'px';
+      wctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const cx = size / 2;
+      const cy = size / 2;
+      const radius = size / 2 - 0; // leave some padding inside border
+
+      // Background circle
+      wctx.clearRect(0, 0, size, size);
+      wctx.save();
+      wctx.translate(cx, cy);
+      wctx.beginPath();
+      wctx.arc(0, 0, radius + 3, 0, Math.PI * 2);
+      wctx.fillStyle = '#ffffff';
+      wctx.fill();
+      wctx.restore();
+
+      // Colors for slices
+
+      // Start so index 0 is centered at top (pointer at 12 o'clock)
+      const startOffset = -Math.PI / 2;
+
+      for (let i = 0; i < n; i++) {
+        const start = startOffset + i * anglePer;
+        const end = start + anglePer;
+        // Slice
+        wctx.beginPath();
+        wctx.moveTo(cx, cy);
+        wctx.arc(cx, cy, radius, start, end);
+        wctx.closePath();
+        wctx.fillStyle = colors[i % colors.length];
+        wctx.fill();
+        // Divider
+        wctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        wctx.lineWidth = 0.01;
+        wctx.stroke();
+
+        // Label along the radial center line of the slice
+        const mid = start + anglePer / 2;
+        wctx.save();
+        wctx.translate(cx, cy);
+        // First, align to the slice's radius for correct position
+        wctx.rotate(mid);
+        // Position at the radial center between hub and rim
+        const rCenter = radius * 0.6;
+        wctx.translate(rCenter, 0);
+        // Do not change orientation dynamically
+
+        // Font sizing with auto-shrink to fit a max width
+        const baseFont = Math.min(13, Math.max(10, Math.floor(radius * 0.11)));
+        let fontSize = baseFont;
+        const text = String(labels[i]);
+        wctx.font = `600 ${fontSize}px Arial, sans-serif`;
+        let width = wctx.measureText(text).width;
+        const maxWidth = radius * 0.8 // available length along the radial line
+        if (width > maxWidth) {
+          const scale = Math.max(0.6, maxWidth / width)*0 + 0.5;
+          fontSize = Math.max(9, Math.floor(baseFont * scale));
+          wctx.font = `600 ${fontSize}px Arial, sans-serif`;
+        }
+
+        wctx.fillStyle = '#fff';
+        wctx.textAlign = 'center';
+        wctx.textBaseline = 'middle';
+        wctx.fillText(text, 0, 0);
+        wctx.restore();
+      }
+
+      // Center hub
+      wctx.beginPath();
+      wctx.arc(cx, cy, Math.max(14, radius * 0.12), 0, Math.PI * 2);
+      wctx.fillStyle = '#ffffff';
+      wctx.fill();
+      wctx.lineWidth = 3;
+      wctx.strokeStyle = 'rgba(0,0,0,0.15)';
+      wctx.stroke();
+    }
+
+    // Initial draw and on resize
+    function redraw() { drawWheel(prizes); }
+    window.addEventListener('resize', redraw);
+    // Defer initial draw to ensure layout is settled
+    requestAnimationFrame(redraw);
+
+    // Initial state (no persistence)
+    spinButton.disabled = false;
+
+    // Simple confetti implementation
+    const confetti = (() => {
+      const ctx = confettiCanvas.getContext('2d');
+      let W = confettiCanvas.width = window.innerWidth;
+      let H = confettiCanvas.height = window.innerHeight;
+      let pieces = [];
+      let running = false;
+
+      window.addEventListener('resize', () => {
+        W = confettiCanvas.width = window.innerWidth;
+        H = confettiCanvas.height = window.innerHeight;
+      });
+
+      function randomColor() {
+        const colors = ['#f94144','#f3722c','#f8961e','#f9844a','#f9c74f','#90be6d','#43aa8b','#577590'];
+        return colors[Math.floor(Math.random()*colors.length)];
+      }
+
+      function spawn(n = 120) {
+        pieces = Array.from({length: n}).map(() => ({
+          x: Math.random()*W,
+          y: -20 - Math.random()*H*0.5,
+          w: 8 + Math.random()*6,
+          h: 8 + Math.random()*10,
+          r: Math.random()*2*Math.PI,
+          vX: -1 + Math.random()*2,
+          vY: 2 + Math.random()*3,
+          vR: -0.1 + Math.random()*0.2,
+          color: randomColor()
+        }));
+      }
+
+      function draw() {
+        ctx.clearRect(0,0,W,H);
+        pieces.forEach(p => {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.r);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+          ctx.restore();
+          p.x += p.vX; p.y += p.vY; p.r += p.vR;
+          if (p.y > H + 20) p.y = -20;
+          if (p.x < -20) p.x = W + 20; if (p.x > W + 20) p.x = -20;
+        });
+      }
+
+      function loop() {
+        if (!running) return;
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      return {
+        start(durationMs = 3600000) {
+          spawn(); running = true; loop();
+          setTimeout(() => { running = false; ctx.clearRect(0,0,W,H); }, durationMs);
+        }
+      };
+    })();
+
+    function openModal(prizeText) {
+      prizeTextEl.textContent = `Prize: ${prizeText}`;
+      backdrop.classList.add('active');
+      backdrop.setAttribute('aria-hidden', 'false');
+      // restart animation
+      const modalEl = backdrop.querySelector('.spinner-modal');
+      modalEl.classList.remove('pop-spin-in');
+      void modalEl.offsetWidth; // reflow
+      modalEl.classList.add('pop-spin-in');
+      // ensure submit starts disabled until valid
+      if (claimForm) {
+        updateSubmitState();
+      }
+    }
+
+    function closeModal() {
+      const modalEl = backdrop.querySelector('.spinner-modal');
+      // Let opacity transition on backdrop play out
+      backdrop.classList.remove('active');
+      backdrop.setAttribute('aria-hidden', 'true');
+      modalEl.classList.remove('pop-spin-in');
+    }
+
+    // Secondary modal controls (pre-rendered)
+    function openSecondModal() {
+      secondaryBackdrop.classList.add('active');
+      secondaryBackdrop.setAttribute('aria-hidden', 'false');
+      const modalEl = secondaryBackdrop.querySelector('.spinner-modal');
+      modalEl.classList.remove('pop-spin-in');
+      void modalEl.offsetWidth;
+      modalEl.classList.add('pop-spin-in');
+    }
+    function closeSecondModal() {
+    const modalEl = secondaryBackdrop.querySelector('.spinner-modal');
+      secondaryBackdrop.classList.remove('active');
+      secondaryBackdrop.setAttribute('aria-hidden', 'true');
+      modalEl.classList.remove('pop-spin-in');
+    }
+    secondaryCloseBtn.addEventListener('click', closeSecondModal);
+    secondaryOkBtn.addEventListener('click', closeSecondModal);
+    // Expose for manual triggering if needed
+    window.openSecondModal = openSecondModal;
+    window.closeSecondModal = closeSecondModal;
+
+    spinButton.addEventListener('click', () => {
+      if (isSpinning) return;
+      if (spinUsed) return;
+      isSpinning = true;
+      spinButton.disabled = true;
+
+      // Choose prize and compute target angle without resetting after stop
+      const randomRotations = Math.floor(Math.random() * 3)*0 + 7; // 3-5 full spins
+      
+      let prizeIndex;
+      
+      // Check if forced stop index is set
+      if (forcedStopIndex !== null) {
+        prizeIndex = forcedStopIndex;
+        console.log(`Using forced stop index: ${prizeIndex} (${prizes[prizeIndex]})`);
+      } else {
+        // Original logic: Always land on "FREE STUFF" if present; otherwise use prior winning logic
+        const targetLabelRe = /^\s*FREE\s*STUFF\s*$/i;
+        const freeStuffIndices = prizes
+          .map((p, i) => ({ p, i }))
+          .filter(x => targetLabelRe.test(String(x.p)))
+          .map(x => x.i);
+        
+        if (freeStuffIndices.length) {
+          prizeIndex = freeStuffIndices[0];
+        } else {
+          const losingRe = /(try\s*again|no\s*win|lose|sorry)/i;
+          const winningIndices = prizes
+            .map((p, i) => ({ p, i }))
+            .filter(x => !losingRe.test(String(x.p)))
+            .map(x => x.i);
+          prizeIndex = winningIndices.length
+            ? winningIndices[Math.floor(Math.random() * winningIndices.length)]
+            : 0; // fallback
+        }
+      }
+      const anglePerPrize = 360 / prizes.length + 10;
+      // Offset so the chosen prize lands under the pointer (top, 0deg)
+      const prizeAngleFromTop = prizeIndex * anglePerPrize + anglePerPrize / 2; // center of segment
+      const normalized = ((currentAngle % 360) + 360) % 360;
+      const deltaToPrize = (360 - normalized - prizeAngleFromTop + 360) % 360;
+      const targetAngle = currentAngle + randomRotations * 360 + deltaToPrize;
+
+      // Ensure transition is enabled for spinning with smoother deceleration
+      wheel.style.transition = 'transform 4s cubic-bezier(0.15, 0.46, 0.45, 1)';
+      wheel.style.transform = `rotate(${targetAngle}deg)`;
+
+      const onEnd = () => {
+        wheel.removeEventListener('transitionend', onEnd);
+        // Normalize angle instantly without additional rotation
+        const normalized = ((targetAngle % 360) + 360) % 360;
+        wheel.style.transition = 'none';
+        wheel.style.transform = `rotate(${normalized}deg)`;
+        // Force reflow so next set transition takes effect
+        void wheel.offsetWidth;
+        currentAngle = normalized;
+        // Redraw labels accounting for final rotation so orientation is correct on-screen
+        redraw();
+
+        // Celebrate and show claim modal
+        confetti.start(30*60*1000);
+        setTimeout(() => {
+          openModal(prizes[prizeIndex]);
+          // Permanently disable further spins after first attempt
+          spinUsed = true;
+          spinButton.disabled = true;
+          spinButton.textContent = '!!! YOU WON !!!';
+        }, 1000);
+
+        isSpinning = false;
+        // Keep button disabled while modal is open to encourage claiming
+      };
+      wheel.addEventListener('transitionend', onEnd);
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      closeModal();
+      if (!spinUsed) spinButton.disabled = false;
+    });
+
+  function updateSubmitState() {
+      if (!claimSubmitBtn) return;
+      const valid = claimForm.checkValidity();
+      claimSubmitBtn.disabled = !valid;
+  }
+
+  claimForm.addEventListener('input', updateSubmitState);
+  claimForm.addEventListener('change', updateSubmitState);
+
+  claimForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!claimForm.checkValidity()) {
+      claimForm.reportValidity();
+      updateSubmitState();
+      return;
+    }
+    // Simulate submit
+    setTimeout(() => {
+      if (window.closeSpinnerModal) {
+        window.closeSpinnerModal();
+      }
+      closeModal();
+      if (claimStatusModal) claimStatusModal.show();
+    }, 1000);
+
+  });
+
+
+
+  // Initialize submit button state on load
+  updateSubmitState();
+
+  // openModal(1);
+  </script>
+</body>
+</html>

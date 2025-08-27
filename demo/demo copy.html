@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Spin Widget Demo</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:40px;}
+    .hero{max-width:700px;margin:auto;text-align:center}
+    .cta{padding:12px 18px;border:none;border-radius:8px;background:#ff6200;color:#fff;font-weight:700;cursor:pointer}
+  </style>
+  <script defer src="./spin-widget.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const openBtn = document.getElementById('open-modal');
+      openBtn.addEventListener('click', ()=>{
+        SpinWheelModal.open({
+          prizes: [
+            '10% Off Your Next Purchase!',
+            'Free Shipping on Your Order!',
+            'Exclusive Product Recommendation!',
+            '$5 Gift Card!'
+          ],
+          // disableAfterFirstPlay: false, // allow multiple plays for demo if needed
+        });
+      });
+    });
+  </script>
+  </head>
+  <body>
+    <div class="hero">
+      <h1>Reusable Spin-to-Win Modal</h1>
+      <p>Click the button to open the spin wheel modal with backdrop (great for promotions/ads).</p>
+      <button id="open-modal" class="cta">Open Spin Modal</button>
+    </div>
+  </body>
+  </html>

@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendation Spin Game</title>
+    <style>
+        :root {
+            /* Colors */
+            --color-bg: #f0f0f0;
+            --color-text: #333;
+            --color-white: #ffffff;
+            --color-border: #ddd;
+            --color-accent: #ff6200;
+            --color-disabled: #ccc;
+            --color-label-bg: #47a04a;
+            --backdrop-bg: rgba(0,0,0,0.5);
+            --shadow-soft: rgba(0,0,0,0.2);
+            --shadow-strong: rgba(0,0,0,0.5);
+            --color-wheel-border: #ffffff;
+            --modal-accent-bg: #f77321;
+            --btn-primary-pulse-bg: #ffe65e;
+
+            /* Typography */
+            --font-family: Arial, sans-serif;
+            --font-size-base: 14px;
+            --font-size-button: 18px;
+            --font-size-h2: 22px;
+            --font-size-h1: 46px;
+
+            /* Radii */
+            --radius-button: 5px;
+            --radius-modal: 12px;
+            --radius-input: 6px;
+
+            /* Sizes and layout */
+            --wheel-size: 320px;
+            --modal-max-width: 420px;
+            --modal-content-max-width: 400px;
+            --spacing-xs: 5px;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: var(--font-family);
+            background-color: var(--color-bg);
+        }
+        #wheel-container {
+            position: relative;
+            width: var(--wheel-size);
+            height: var(--wheel-size);
+        }
+        #wheel {
+            width: 100%;
+            height: 100%;
+            transition: transform 3s ease-out;
+            border-radius: 50%;
+            border: var(--color-wheel-border) solid 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #wheel-canvas {
+          width: 100%;
+          height: 100%;
+          display: block;
+          border-radius: 50%;
+          filter: drop-shadow(0 2px 20px var(--shadow-strong));
+        }
+        /* Pointer indicator at the top */
+        .pointer {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translate(105px, 35px) rotate3d(0, 0, 1, -15deg);
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 25px solid var(--color-accent);
+            filter: drop-shadow(0 2px 2px var(--shadow-strong));
+            z-index: 2;
+        }
+        #spin-button {
+            margin-top: 30px;
+            padding: 10px 20px;
+            font-size: var(--font-size-button);
+            cursor: pointer;
+            background-color: var(--color-accent);
+            color: var(--color-white);
+            border: none;
+            border-radius: var(--radius-button);
+            filter: drop-shadow(0 2px 2px var(--shadow-strong));
+        }
+        #spin-button:disabled {
+            background-color: var(--color-disabled);
+            cursor: not-allowed;
+        }
+        /* Modal styles */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: var(--backdrop-bg);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 250ms ease-out;
+    }
+    .modal-backdrop.active {
+      display: flex;
+      opacity: 1;
+    }
+        .modal {
+            background: var(--color-white);
+            width: 90%;
+            max-width: var(--modal-max-width);
+            border-radius: var(--radius-modal);
+            padding: 20px;
+            box-shadow: 0 10px 30px var(--shadow-soft);
+      transform: scale(0.9) rotate(-8deg);
+      will-change: transform, opacity;
+        }
+    /* Pop + Spin in animation */
+    @keyframes popSpinIn {
+      0% { transform: scale(0.4) rotate(-90deg); opacity: 0; }
+      60% { transform: scale(1.06) rotate(10deg); opacity: 1; }
+      80% { transform: scale(0.98) rotate(-3deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); background-color: var(--color-accent); }
+      50% { transform: scale(1.05); background-color: var(--btn-primary-pulse-bg); }
+      100% { transform: scale(1); background-color: var(--color-accent); }
+    }
+
+    .modal.pop-spin-in {
+      animation: popSpinIn 520ms cubic-bezier(.2,.8,.2,1) both;
+    }
+        .modal h2 { margin: 0 0 8px; font-size: var(--font-size-h2); }
+        .modal p { margin: 0 0 16px; color: var(--color-text); }
+        .modal form { display: grid; gap: 10px; }
+        .modal label { font-size: var(--font-size-base); color: var(--color-text); }
+        .modal input {
+            padding: 10px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-input);
+            font-size: var(--font-size-base);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .btn {
+            padding: 10px 14px;
+            border: none;
+            border-radius: var(--radius-input);
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn.primary { 
+          background: var(--color-accent); 
+          color: var(--color-white);
+          border: 3px solid var(--color-bg);
+          border-radius: 10px;
+          font-size: var(--font-size-button);
+          box-shadow: 0 2px 10px var(--shadow-strong);
+          animation: pulse 1s infinite;
+        }
+        .btn.ghost { 
+          background: var(--color-bg); 
+          color: var(--color-text); 
+        }
+
+        /* Confetti canvas overlay */
+        #confetti-canvas {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9;
+        }
+        .modal {
+          position: relative;
+          background-color: var(--modal-accent-bg);
+          z-index: 1000;
+          width: min(90vw, var(--modal-content-max-width));
+          margin: var(--spacing-xs);
+          /* padding: 35px; */
+        }
+        .modal2-background {
+          overflow: hidden;
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0.5;
+          z-index: 999;
+        }
+        .modal2-bg-layer {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 150%;
+          height: 150%;
+        }
+        .modal2-content {
+          position: relative;
+          z-index: 1000;
+          color: #fff;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .modal-actions {
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+          margin-top: 16px;
+        }
+        .modal2-label {
+          position: absolute;
+          top: -50px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 140px;
+          border-radius: 50%;
+          overflow: hidden;
+          border: var(--color-border) 3px solid;
+          z-index: 1999;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          box-shadow: 0 2px 10px var(--shadow-strong);
+        }
+        .modal2-label img {
+          width: 130px;
+          height: 120px;
+        }
+        label {
+          vertical-align: middle;
+          display: inline-block;
+          width: 50px;
+          color: var(--color-white)!important;
+          background-color: var(--color-label-bg);
+          height: 36.18px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 0 10px;
+          border-radius: 6px 0 0 6px;
+          border-left: 1px solid var(--color-border);
+          border-top: 1px solid var(--color-border);
+          border-bottom: 1px solid var(--color-border);
+        }
+        .modal input {
+          border-radius: 0 var(--radius-input) var(--radius-input) 0;
+        }
+        .claim-form {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          max-width: 100px;
+        }
+        .claim-form--field {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+        }
+        #claim-title {
+          font-size: var(--font-size-h1);
+          color: var(--color-white);
+          margin-bottom: 16px;
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9));
+          padding: 5px 20px;
+        }
+    </style>
+</head>
+<body>
+  <div id="wheel-container">
+    <div class="pointer"></div>
+    <div id="wheel">
+  <canvas id="wheel-canvas"></canvas>
+    </div>
+  </div>
+  <button id="spin-button">Spin to Win!</button>
+
+  <!-- Confetti -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Claim Modal -->
+  <div id="claim-backdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="claim-title">
+
+      <div class="modal2-label">
+        <img src="won.png" alt="Prize Image" srcset="">
+      </div>
+
+      <div class="modal2-background">
+        <div class="modal2-bg-layer">
+          <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1003.97 1009.5">
+            <defs>
+              <style>.cls-1{fill-rule:evenodd;fill:url(#radial-gradient);}</style>
+              <radialGradient id="radial-gradient" cx="615.23" cy="557.75" r="503.37" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#FEE860" stop-opacity="1"/>
+                <stop offset="0.8" stop-color="#FFE357" stop-opacity="0.2"/>
+              </radialGradient>
+            </defs>
+            <path class="cls-1" d="M615.23,53V557.75L510.29,64ZM318.54,149.4,615.23,557.75,409.93,96.64Zm-140.44,156L615.23,557.75,240.13,220ZM113.24,505l502,52.76-480-156Zm21.94,208.74,480.05-156-502,52.76Zm105,181.76,375.1-337.74L178.1,810.13Zm169.8,123.37,205.3-461.11L318.54,966.1Zm205.3,43.64V557.75L510.29,1051.47Zm205.3-43.64L615.23,557.75l104.94,493.72Zm169.8-123.37L615.23,557.75,911.91,966.1Zm104.94-181.76-480-156,437.13,252.38ZM1117.21,505l-502,52.76,502,52.76Zm-64.85-199.62L615.23,557.75l480-156Zm-140.45-156L615.23,557.75,990.33,220ZM720.17,64,615.23,557.75,820.53,96.64Z" transform="translate(-113.24 -53)"/>
+          </svg>
+
+        </div>
+      </div>
+
+      <div class="modal2-content">
+        <br>
+        <br>
+        <br>
+        <!-- <h2 id="claim-title">You won!</h2> -->
+        <p id="claim-prize-text">Prize: ...</p>
+        <form id="claim-form">
+          <div class="claim-form--field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="Enter your email" required>
+          </div>
+          <div class="claim-form--field">
+            <label for="phone">Phone</label>
+            <input id="phone" name="phone" type="tel" placeholder="Enter your phone" pattern="[0-9+()\-\s]{7,}" required>
+          </div>
+          <div class="claim-form--field">
+            <label for="zip">ZIP</label>
+            <input id="zip" name="zip" type="text" placeholder="Enter your ZIP" pattern="[A-Za-z0-9\-\s]{3,10}" required>
+          </div>
+          <div class="modal-actions">
+            <button type="submit" class="btn primary">Claim prize</button>
+            <!-- <button type="button" id="close-modal" class="btn ghost">Close</button> -->
+          </div>
+        </form>
+        <p id="claim-status" style="display:none; color:#2e7d32; font-weight:600; margin-top:8px;">Thank you! We received your info.</p>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Secondary Modal (pre-rendered) -->
+  <div id="secondary-backdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="secondary-title">
+      <h2 id="secondary-title">Special offer</h2>
+      <p id="secondary-text">Don’t miss out on this limited-time deal.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn primary" id="secondary-ok">OK</button>
+        <button type="button" class="btn ghost" id="secondary-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const wheel = document.getElementById('wheel');
+    const wheelCanvas = document.getElementById('wheel-canvas');
+    const wctx = wheelCanvas.getContext('2d');
+    const spinButton = document.getElementById('spin-button');
+    const backdrop = document.getElementById('claim-backdrop');
+    const prizeTextEl = document.getElementById('claim-prize-text');
+    const closeModalBtn = document.getElementById('close-modal');
+    const claimForm = document.getElementById('claim-form');
+    const claimStatus = document.getElementById('claim-status');
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    // Secondary modal refs
+    const secondaryBackdrop = document.getElementById('secondary-backdrop');
+    const secondaryCloseBtn = document.getElementById('secondary-close');
+    const secondaryOkBtn = document.getElementById('secondary-ok');
+
+    // Configure your 12 section labels here (editable)
+    const prizes = [
+      "10% OFF",
+      "Free Shipping",
+      "Try Again",
+      "Bonus Points",
+      "Try Again",
+      "FREE STUFF",
+      "10% OFF",
+      "Free Shipping",
+      "Try Again",
+      "Bonus Points",
+      "Try Again",
+      "FREE STUFF",
+    ];
+    const colors = ['#057ACD','#0095FF','#72665d','#64b5f6','#1D3665','#00B800'];
+
+  let isSpinning = false;
+  let currentAngle = 0; // Keep the wheel where it stopped
+  let spinUsed = false;
+
+    // --- Canvas wheel rendering (no SVG) ---
+  function drawWheel(labels) {
+      const n = labels.length;
+      const anglePer = (Math.PI * 2) / n;
+      // Fit canvas to element with devicePixelRatio for crispness
+      const size = Math.min(wheel.clientWidth, wheel.clientHeight);
+      const dpr = window.devicePixelRatio || 1;
+      wheelCanvas.width = Math.max(1, Math.floor(size * dpr));
+      wheelCanvas.height = Math.max(1, Math.floor(size * dpr));
+      wheelCanvas.style.width = size + 'px';
+      wheelCanvas.style.height = size + 'px';
+      wctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const cx = size / 2;
+      const cy = size / 2;
+      const radius = size / 2 - 0; // leave some padding inside border
+
+      // Background circle
+      wctx.clearRect(0, 0, size, size);
+      wctx.save();
+      wctx.translate(cx, cy);
+      wctx.beginPath();
+      wctx.arc(0, 0, radius + 3, 0, Math.PI * 2);
+      wctx.fillStyle = '#ffffff';
+      wctx.fill();
+      wctx.restore();
+
+      // Colors for slices
+
+      // Start so index 0 is centered at top (pointer at 12 o'clock)
+      const startOffset = -Math.PI / 2;
+
+      for (let i = 0; i < n; i++) {
+        const start = startOffset + i * anglePer;
+        const end = start + anglePer;
+        // Slice
+        wctx.beginPath();
+        wctx.moveTo(cx, cy);
+        wctx.arc(cx, cy, radius, start, end);
+        wctx.closePath();
+        wctx.fillStyle = colors[i % colors.length];
+        wctx.fill();
+        // Divider
+        wctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        wctx.lineWidth = 0.01;
+        wctx.stroke();
+
+        // Label along the radial center line of the slice
+        const mid = start + anglePer / 2;
+        wctx.save();
+        wctx.translate(cx, cy);
+        // First, align to the slice's radius for correct position
+        wctx.rotate(mid);
+        // Position at the radial center between hub and rim
+        const rCenter = radius * 0.68;
+        wctx.translate(rCenter, 0);
+        // Do not change orientation dynamically
+
+        // Font sizing with auto-shrink to fit a max width
+        const baseFont = Math.min(14, Math.max(10, Math.floor(radius * 0.11)));
+        let fontSize = baseFont;
+        const text = String(labels[i]);
+        wctx.font = `600 ${fontSize}px Arial, sans-serif`;
+        let width = wctx.measureText(text).width;
+        const maxWidth = radius * 0.8; // available length along the radial line
+        if (width > maxWidth) {
+          const scale = Math.max(0.6, maxWidth / width);
+          fontSize = Math.max(10, Math.floor(baseFont * scale));
+          wctx.font = `600 ${fontSize}px Arial, sans-serif`;
+        }
+
+        wctx.fillStyle = '#fff';
+        wctx.textAlign = 'center';
+        wctx.textBaseline = 'middle';
+        wctx.fillText(text, 0, 0);
+        wctx.restore();
+      }
+
+      // Center hub
+      wctx.beginPath();
+      wctx.arc(cx, cy, Math.max(14, radius * 0.12), 0, Math.PI * 2);
+      wctx.fillStyle = '#ffffff';
+      wctx.fill();
+      wctx.lineWidth = 3;
+      wctx.strokeStyle = 'rgba(0,0,0,0.15)';
+      wctx.stroke();
+    }
+
+    // Initial draw and on resize
+    function redraw() { drawWheel(prizes); }
+    window.addEventListener('resize', redraw);
+    // Defer initial draw to ensure layout is settled
+    requestAnimationFrame(redraw);
+
+    // Initial state (no persistence)
+    spinButton.disabled = false;
+
+    // Simple confetti implementation
+    const confetti = (() => {
+      const ctx = confettiCanvas.getContext('2d');
+      let W = confettiCanvas.width = window.innerWidth;
+      let H = confettiCanvas.height = window.innerHeight;
+      let pieces = [];
+      let running = false;
+
+      window.addEventListener('resize', () => {
+        W = confettiCanvas.width = window.innerWidth;
+        H = confettiCanvas.height = window.innerHeight;
+      });
+
+      function randomColor() {
+        const colors = ['#f94144','#f3722c','#f8961e','#f9844a','#f9c74f','#90be6d','#43aa8b','#577590'];
+        return colors[Math.floor(Math.random()*colors.length)];
+      }
+
+      function spawn(n = 120) {
+        pieces = Array.from({length: n}).map(() => ({
+          x: Math.random()*W,
+          y: -20 - Math.random()*H*0.5,
+          w: 8 + Math.random()*6,
+          h: 8 + Math.random()*10,
+          r: Math.random()*2*Math.PI,
+          vX: -1 + Math.random()*2,
+          vY: 2 + Math.random()*3,
+          vR: -0.1 + Math.random()*0.2,
+          color: randomColor()
+        }));
+      }
+
+      function draw() {
+        ctx.clearRect(0,0,W,H);
+        pieces.forEach(p => {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.r);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+          ctx.restore();
+          p.x += p.vX; p.y += p.vY; p.r += p.vR;
+          if (p.y > H + 20) p.y = -20;
+          if (p.x < -20) p.x = W + 20; if (p.x > W + 20) p.x = -20;
+        });
+      }
+
+      function loop() {
+          if (!running) return;
+          draw();
+          requestAnimationFrame(loop);
+      }
+
+      return {
+        start(durationMs = 360000) {
+          spawn(); running = true; loop();
+          setTimeout(() => { running = false; ctx.clearRect(0,0,W,H); }, durationMs);
+        }
+      };
+    })();
+
+    openModal();
+
+    function openModal(prizeText) {
+      prizeTextEl.textContent = `Prize: ${prizeText}`;
+      backdrop.classList.add('active');
+      backdrop.setAttribute('aria-hidden', 'false');
+      // restart animation
+      const modalEl = backdrop.querySelector('.modal');
+      modalEl.classList.remove('pop-spin-in');
+      void modalEl.offsetWidth; // reflow
+      modalEl.classList.add('pop-spin-in');
+    }
+
+    function closeModal() {
+      const modalEl = backdrop.querySelector('.modal');
+      // Let opacity transition on backdrop play out
+      backdrop.classList.remove('active');
+      backdrop.setAttribute('aria-hidden', 'true');
+      modalEl.classList.remove('pop-spin-in');
+    }
+
+    // Secondary modal controls (pre-rendered)
+    function openSecondModal() {
+      secondaryBackdrop.classList.add('active');
+      secondaryBackdrop.setAttribute('aria-hidden', 'false');
+      const modalEl = secondaryBackdrop.querySelector('.modal');
+      modalEl.classList.remove('pop-spin-in');
+      void modalEl.offsetWidth;
+      modalEl.classList.add('pop-spin-in');
+    }
+    function closeSecondModal() {
+      const modalEl = secondaryBackdrop.querySelector('.modal');
+      secondaryBackdrop.classList.remove('active');
+      secondaryBackdrop.setAttribute('aria-hidden', 'true');
+      modalEl.classList.remove('pop-spin-in');
+    }
+    secondaryCloseBtn.addEventListener('click', closeSecondModal);
+    secondaryOkBtn.addEventListener('click', closeSecondModal);
+    // Expose for manual triggering if needed
+    window.openSecondModal = openSecondModal;
+    window.closeSecondModal = closeSecondModal;
+
+    spinButton.addEventListener('click', () => {
+      if (isSpinning) return;
+      if (spinUsed) return;
+      isSpinning = true;
+      spinButton.disabled = true;
+
+      // Choose prize and compute target angle without resetting after stop
+      // const randomRotations = Math.floor(Math.random() * 3) + 3; // 3-5 full spins
+      const randomRotations = 4; // 3-5 full spins
+      // Always win: choose from labels that aren't "Try Again" or similar
+      const losingRe = /(try\s*again|no\s*win|lose|sorry)/i;
+      const winningIndices = prizes
+        .map((p, i) => ({ p, i }))
+        .filter(x => !losingRe.test(String(x.p)))
+        .map(x => x.i);
+      const prizeIndex = winningIndices.length
+        // ? winningIndices[Math.floor(Math.random() * winningIndices.length)]
+        ? winningIndices[winningIndices.length - 4]
+        : 0; // fallback
+      const anglePerPrize = 360 / (prizes.length - 4) + 1;
+      // Offset so the chosen prize lands under the pointer (top, 0deg)
+      const prizeAngle = prizeIndex * anglePerPrize + anglePerPrize / 2; // center of segment
+      const targetAngle = currentAngle + randomRotations * 360 + (360 - (currentAngle % 360) - prizeAngle);
+
+      // Ensure transition is enabled for spinning
+      wheel.style.transition = 'transform 3s ease-out';
+      wheel.style.transform = `rotate(${targetAngle}deg)`;
+
+      const onEnd = () => {
+        wheel.removeEventListener('transitionend', onEnd);
+        // Normalize angle instantly without additional rotation
+        const normalized = ((targetAngle % 360) + 360) % 360;
+        wheel.style.transition = 'none';
+        wheel.style.transform = `rotate(${normalized}deg)`;
+        // Force reflow so next set transition takes effect
+        void wheel.offsetWidth;
+        currentAngle = normalized;
+        // Redraw labels accounting for final rotation so orientation is correct on-screen
+        redraw();
+
+        // Celebrate and show claim modal
+        confetti.start(360000);
+        setTimeout(() => {
+          openModal(prizes[prizeIndex]);
+          // Permanently disable further spins after first attempt
+          spinUsed = true;
+          spinButton.disabled = true;
+          spinButton.textContent = 'Already played';
+        }, 1000);
+
+        isSpinning = false;
+        // Keep button disabled while modal is open to encourage claiming
+      };
+      wheel.addEventListener('transitionend', onEnd);
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      closeModal();
+      if (!spinUsed) spinButton.disabled = false;
+    });
+
+  claimForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      // Simulate submit
+      claimStatus.style.display = 'block';
+
+      setTimeout(() => {
+        claimStatus.style.display = 'none';
+        closeModal();
+        if (!spinUsed) spinButton.disabled = false;
+      }, 1200);
+
+      setTimeout(() => {
+        if (window.closeSpinnerModal) {
+          window.closeSpinnerModal();
+        }
+      }, 3000);
+
+    });
+  </script>
+</body>
+</html>

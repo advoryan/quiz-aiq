@@ -1,0 +1,856 @@
+<?php
+  session_start();
+
+  if (isset($_SESSION['quick-exit-fired']) && $_SESSION['quick-exit-fired'] == 1) {
+    header("Location: https://www.google.com");
+    exit(); 
+  }
+  
+  $domain = $_SERVER['HTTP_HOST'];
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Leasing Leads</title>
+    <link rel="stylesheet" href="build/css/intlTelInput.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/slick.css">
+    <link href="css/style.css?v=1.20" rel="stylesheet">
+</head>
+
+<body>
+    <header><p>Secure a Customized Vehicle Quote Online in minutes!</p></header>
+    <section class="banner">
+        <div class="container">
+            <div class="bannerWrapper">
+                <div class="textWrapper">
+                    <h1>Wholesale Car Prices, Delivered to Your Door – No Dealer Hassles!</h1>
+                </div>
+                <div class="form-container">
+                    <form id="leasing-form">
+                        <input id="leadid_token" name="universal_leadid" type="hidden" value=""/>
+
+                        
+                        <!-- Step 1: Name -->
+                        <div class="form-step active" id="step-1">
+                            <div class="stepInner">
+                                <div class="stepHead">
+                                    <div class="stepIcon">
+                                        <img src="images/employe-card.png" alt="">
+                                    </div>
+                                    <p>Let's get started!</p>
+                                </div>
+                                <div class="formFieldsWrapper">
+                                    <div class="formFields">
+                                        <label for="first-name">First Name <span class="required">*</span></label>
+                                        <div class="inputBox">
+                                            <input type="text" placeholder="Type your first name." id="first-name" data-name="first_name" onchange="handleChange(this)" required>
+                                            <svg width="18" height="20" viewBox="0 0 18 20" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M9.00002 11.2651C3.1963 11.2651 0 14.1079 0 19.27C0 19.6732 0.315582 19.9999 0.704956 19.9999H17.295C17.6844 19.9999 18 19.6732 18 19.27C18 14.1082 14.8037 11.2651 9.00002 11.2651ZM1.43557 18.5401C1.71286 14.6805 4.25422 12.725 9.00002 12.725C13.7458 12.725 16.2872 14.6805 16.5647 18.5401H1.43557Z"
+                                                    fill="#D5D2DC"></path>
+                                                <path
+                                                    d="M8.99996 0C6.33402 0 4.32373 2.12336 4.32373 4.93895C4.32373 7.83699 6.42147 10.1944 8.99996 10.1944C11.5785 10.1944 13.6762 7.83699 13.6762 4.93918C13.6762 2.12336 11.6659 0 8.99996 0ZM8.99996 8.7348C7.19879 8.7348 5.73364 7.03211 5.73364 4.93918C5.73364 2.92313 7.10738 1.45984 8.99996 1.45984C10.8623 1.45984 12.2663 2.95547 12.2663 4.93918C12.2663 7.03211 10.8011 8.7348 8.99996 8.7348Z"
+                                                    fill="#D5D2DC"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="error" id="first-name-error"></div>
+                                    </div>
+                                    
+                                    <div class="formFields">
+                                        <label for="last-name">Last Name <span class="required">*</span></label>
+                                        <div class="inputBox">
+                                            <input type="text" placeholder="Type your last name." id="last-name" data-name="last_name" onchange="handleChange(this)" required>
+                                            <svg width="18" height="20" viewBox="0 0 18 20" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M9.00002 11.2651C3.1963 11.2651 0 14.1079 0 19.27C0 19.6732 0.315582 19.9999 0.704956 19.9999H17.295C17.6844 19.9999 18 19.6732 18 19.27C18 14.1082 14.8037 11.2651 9.00002 11.2651ZM1.43557 18.5401C1.71286 14.6805 4.25422 12.725 9.00002 12.725C13.7458 12.725 16.2872 14.6805 16.5647 18.5401H1.43557Z"
+                                                    fill="#D5D2DC"></path>
+                                                <path
+                                                    d="M8.99996 0C6.33402 0 4.32373 2.12336 4.32373 4.93895C4.32373 7.83699 6.42147 10.1944 8.99996 10.1944C11.5785 10.1944 13.6762 7.83699 13.6762 4.93918C13.6762 2.12336 11.6659 0 8.99996 0ZM8.99996 8.7348C7.19879 8.7348 5.73364 7.03211 5.73364 4.93918C5.73364 2.92313 7.10738 1.45984 8.99996 1.45984C10.8623 1.45984 12.2663 2.95547 12.2663 4.93918C12.2663 7.03211 10.8011 8.7348 8.99996 8.7348Z"
+                                                    fill="#D5D2DC"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="error" id="last-name-error"></div>
+                                    </div>
+                                </div>
+                                
+                                <button type="button" class="btn nxt" onclick="nextStep(2)">Next </button>
+                                <p class="banner__secure">
+                                    <img src="images/padlock.png" alt="lock">
+                                    We keep all your information 100% secure &amp; confidential, always.  
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Email -->
+                        <div class="form-step" id="step-2">
+                            <div class="stepInner">
+                                <div class="stepHead">
+                                    <div class="stepIcon">
+                                        <img src="images/3.png" alt="">
+                                    </div>
+                                    <p>Let us know how we can reach you.</p>
+                                </div>
+                                <div class="formFieldsWrapper">
+                                    <div class="formFields">
+                                        <label for="email">Email <span class="required">*</span></label>
+                                        <div class="inputBox">
+                                            <input placeholder="David@example.com" type="email" id="email" data-name="email" onchange="handleChange(this)" required>
+                                            <svg width="18" height="14" viewBox="0 0 18 14" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M16.418 0H1.58203C0.710789 0 0 0.724985 0 1.61538V12.3846C0 13.272 0.707625 14 1.58203 14H16.418C17.287 14 18 13.2775 18 12.3846V1.61538C18 0.728 17.2924 0 16.418 0ZM16.1995 1.07692L9.03354 8.39401L1.80559 1.07692H16.1995ZM1.05469 12.1616V1.83325L6.13403 6.9752L1.05469 12.1616ZM1.80046 12.9231L6.883 7.73338L8.66391 9.53623C8.87006 9.74493 9.20275 9.74425 9.40806 9.53457L11.1445 7.76149L16.1995 12.9231H1.80046ZM16.9453 12.1616L11.8903 7L16.9453 1.83838V12.1616Z"
+                                                    fill="#D5D2DC"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="error" id="email-error"></div>
+                                    </div>
+
+                                    <div class="formFields">
+                                        <label for="number">Phone Number <span class="required">*</span></label>
+                                        <div class="inputBox">
+                                            <input type="tel" placeholder="(xxx) xxx xxxx " type="number" id="number" data-name="phone_number" onchange="handleChange(this)" required>
+                                        </div>
+                                        <div class="error" id="number-error"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form__Btns">
+                                    <button id="leaseBtn" type="button" class="btn lease" data-name="offer_type" data-value="lease" onclick="nextStep(3); handleChange(this); sendToSheet();">Lease</button>
+                                    <button id="financeBtn" type="button" class="btn finance" data-name="offer_type" data-value="finance" onclick="nextStep(3); handleChange(this); sendToSheet();">Finance</button>
+                                </div>
+                                
+                                <p class="banner__secure">
+                                    <!--<img src="images/padlock.png" alt="lock">-->
+                                    <span>By providing your contact info and selecting "Lease" or "Finance" you agree to our <a href="javascript:void(0)" onclick="openPolicyModal()" class="tcpa_link">Privacy Policy</a> and <a href="javascript:void(0)" onclick="openTosModal()" class="tcpa_link">Terms of Use</a>, which includes your agreement to arbitrate claims related to The Consumer Protection Act. You also expressly consent by electronic signature to receive sales, marketing and other calls and texts, including those sent by automated systems or other means for selecting and dialing telephone numbers, or using artificial or prerecorded voice message when a connection is completed from this website and or its partners at the telephone number provided, even if that telephone number is on a do-not-call list. Agreement to receive such texts or calls is not in condition of purchasing goods or services from us.
+                                    </span>
+                              </p>
+                            </div>
+                        </div>
+                        <div class="form-step" id="step-3">
+                            <div class="stepInner">
+                                <img src="images/recorded.svg" alt="">
+                                <p>Your request has been recorded.</p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </section>
+    
+  <!--<div class="tcpa">-->
+    <!--I consent to receive marketing calls and text messages (including via automated technology and prerecorded messages) from destinyrestfund.com and or its partners at the phone number provided above. I understand that my consent is not a condition of purchase. Message and data rates may apply. Reply STOP to opt out.-->
+  <!--  <label>-->
+  <!--      <input type="hidden" id="leadid_tcpa_disclosure">-->
+  <!--      By providing your contact info and selecting "Next Step" you agree to our -->
+  <!--      <a onclick="openPolicyModal()" class="tcpa_link">Privacy Policy</a>-->
+  <!--      and-->
+  <!--      <a onclick="openTosModal()" class="tcpa_link">Terms of Use</a>-->
+  <!--      , which includes your agreement to arbitrate claims related to The Consumer Protection Act. You also expressly consent by electronic signature to receive sales, marketing and other calls and texts, including those sent by automated systems or other means for selecting and dialing telephone numbers, or using artificial or prerecorded voice message when a connection is completed from this website and or its partners at the telephone number provided, even if that telephone number is on a do-not-call list. Agreement to receive such texts or calls is not in condition of purchasing goods or services from us.-->
+  <!--  </label>-->
+  <!--</div>-->
+
+    <section class="review__section with-bg" data-aos="fade-up" data-aos-easing="linear" data-aos-duration="1000">
+        <div class="container">
+            <h2 class="common_heading">Real feedback from real drivers</h2>
+            <p class="common_sub_heading">Learn how we’ve helped our customers to their next car hassle free!</p>
+            <ul class="review__icon reviewSlider">
+                <li>
+                    <div class="reviewWrapper">
+                        <div class="ratingBy">
+                            <div class="ratingLeft">
+                                <img src="images/Chloe-Thompson.png" alt="Chloe Thompson">
+                                <div class="ratingByName">
+                                    <p>Chloe Thompson</p>
+                                    <p><img src="images/t-chk.png" alt="Verified"><span>Verified Customer</span></p>
+                                </div>
+                            </div>
+                            <div class="ratingRight">
+                                <img src="images/review-star-rating.webp" alt="Review Stars">
+                            </div>
+                        </div>
+                        <p class="reviewName">Fast Delivery</p>
+                        <p class="ratingText">“I’m so impressed with G2 Auto Group! From the excellent customer support to the fast delivery of my new car, everything was perfect. I didn’t think buying a car online could be this simple!”</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="reviewWrapper">
+                        <div class="ratingBy">
+                            <div class="ratingLeft">
+                                <img src="images/Oliver-Jackson.png" alt="Oliver Jackson">
+                                <div class="ratingByName">
+                                    <p>Oliver Jackson</p>
+                                    <p><img src="images/t-chk.png" alt="Verified"><span>Verified Customer</span></p>
+                                </div>
+                            </div>
+                            <div class="ratingRight">
+                                <img src="images/review-star-rating.webp" alt="Review Stars">
+                            </div>
+                        </div>
+                        <p class="reviewName">Easy Process</p>
+                        <p class="ratingText">“If you’re looking for a new car without the usual dealership headaches, G2 Auto Group is the way to go. Their wholesale prices and easy process made it a no-brainer. I love my new car, and the whole experience was amazing!”</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="reviewWrapper">
+                        <div class="ratingBy">
+                            <div class="ratingLeft">
+                                <img src="images/Harper-Roberts.png" alt="Harper Roberts">
+                                <div class="ratingByName">
+                                    <p>Harper Roberts</p>
+                                    <p><img src="images/t-chk.png" alt="Verified"><span>Verified Customer</span></p>
+                                </div>
+                            </div>
+                            <div class="ratingRight">
+                                <img src="images/review-star-rating.webp" alt="Review Stars">
+                            </div>
+                        </div>
+                        <p class="reviewName">Highly Recommended</p>
+                        <p class="ratingText">“Highly recommend G2 Auto Group! They provided excellent communication, kept me updated throughout, and delivered my car right to my doorstep. I got exactly what I wanted without any hassle.”</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="reviewWrapper">
+                        <div class="ratingBy">
+                            <div class="ratingLeft">
+                                <img src="images/Amelia-Harris.png" alt="Amelia Harris">
+                                <div class="ratingByName">
+                                    <p>Amelia Harris</p>
+                                    <p><img src="images/t-chk.png" alt="Verified"><span>Verified Customer</span></p>
+                                </div>
+                            </div>
+                            <div class="ratingRight">
+                                <img src="images/review-star-rating.webp" alt="Review Stars">
+                            </div>
+                        </div>
+                        <p class="reviewName">Stress Free</p>
+                        <p class="ratingText">“G2 Auto Group made car buying stress-free. The process was quick, transparent, and the prices were unbeatable. I’m thrilled with my purchase and will definitely be using them again in the future!”</p>
+                    </div>
+                </li>
+
+
+            </ul>
+        </div>
+    </section>
+    <!-- <section class="subscribe__Section">
+        <div class="container">
+            <div class="subscribe__Wrapper">
+                <p>Join our newsletter for updates and news
+                </p>
+                <div class="formWrap">
+                    <div class="subscribe-form">
+                        <input id="subscribe_email" class="subscribe_email" name="subscribe_email" type="text" placeholder="Enter your email address" required="">
+                        <button id="join" class="subscribe-button join">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+    
+      <div id="modal-policy" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-close-btn">✕</div>
+      <h3>Privacy Policy</h3>
+      <p><strong>Last Updated: March 10, 2025</strong></p>
+
+      <p>This Privacy Policy (or “Policy”) explains how we Network collects, uses, stores, and protects your information whenever you use this website (or “Recommended Protections”).</p>
+      
+      <p><strong>Scope of This Policy</strong></p>
+      <p>This Policy describes the types of information we may collect from you or that you may provide when you visit the website and our practices for collecting, using, maintaining, protecting and disclosing that information.</p>
+      <p>This Policy applies to information we collect:</p>
+      <p>On this website;</p>
+      <p>In e-mail, text, and other electronic messages between you and our Services;</p>
+      <p>Through mobile and desktop applications you download as part of our Services or web applications that you access or use through our Services.</p>
+      <p>Please read this Policy carefully to understand our policies and practices regarding your information and how we will treat it. By using the Services, you consent to the data practices prescribed in this Policy. We may periodically post changes to this Policy on this page by revising the date at the top of this Policy, and it is your responsibility to review this Policy, and we encourage you to visit this page often for any updates.</p>
+      
+      <p><strong>Limitations</strong></p>
+      <p>Our Services is not intended for children under the age of 18 years old. No one under 18 may provide any personal information to or through our Services. We do not knowingly collect personal information from children under 18. If you are under 18, do not use or provide any information through our Services. If we learn we have collected or received personal information from a child under 18 without verification of parental consent we will delete that information. If you believe we may have any information form or about a child under 18, please contact us at the addresses provided at the end of this Policy.</p>
+      <p>Our Services is intended for use by persons in the United States of America. If you are accessing our Services, you agree to be subject to the laws of the United States of America and your information will be handled in accordance with such laws. This website is not built to comply with the laws of any other country or nation. If you do not agree to have your information handled in accordance with US laws, you must not use our Services.</p>
+      
+      <p><strong>Information You Provide to Us</strong></p>
+      <p>We collect information you provide to us, including but not limited to when you register for an account, complete a transaction, link an external account to the Services, sign up to receive our email updates, fill out a form, or when you communicate with us. The types of information we may collect include your name, phone number, email address, username, password, government-issued identification numbers and/or copies of government-issued identification cards, services or products requested, and any other information you choose to provide.</p>
+      
+      <p><strong>Information We Collect Automatically from our Services</strong></p>
+      <p>When you use our Services, we automatically collect information about you as follows:</p>
+      <p>Transaction Information. We collect information in connection with each transaction you engage in via the Services, including transaction time, amount of transaction, counterparties to each transaction (if any), and other transaction details.</p>
+      <p>Log Information. We collect standard server logs in connection with your use of our Services, including the type of browser you use, access times, pages viewed, IP address, and the web page you visited before navigating to, or after navigation away from, our Services.</p>
+      <p>Device Information. We collect information about the computer or mobile device you use to access our Services, including the hardware model, operating system and version, unique device identifiers, and mobile network information.</p>
+      <p>Location Information. With your permission, we collect precise location from your mobile device in connection with your use of our mobile app. We may also derive your approximate location from your IP address.</p>
+      
+      <p><strong>Information Collected by Tracking Technologies</strong></p>
+      <p>We may use various technologies to collect information in connection with your use of our Services. The technologies we use include the following:</p>
+      <p>Cookies, which are small files that are sent to your computer or mobile device when you visit a website. Cookies allow our Services to recognize your browser or device and track your usage each time you visit. You can usually decline or remove cookies through your browser or device, but doing so may interfere with your use of Services;</p>
+      <p>Web Beacons. Pages of our Services and our emails may contain small electronic files known as web beacons (also referred to as clear gifs, pixel tags, and single-pixel gifs) that permit the Company, for example, to count users who have visited those pages or opened an email and for other related website statistics (for example, recording the popularity of certain website content and verifying system and server integrity).</p>
+      <p>Mobile device identifiers, which are unique identifiers established by your mobile device operating system that we collect from our mobile apps. These identifiers are used for similar purposes as cookies;</p>
+      <p>Local storage, which stores data locally in your browser, including user preferences; and</p>
+      <p>Pixel tags, which are small blocks of code often used in connection with cookies. Pixel tags (or web beacons) may be placed on our websites and emails, and allow us to track website usage, including to determine when emails have been opened and acted upon.</p>
+      
+      <p><strong>Information From Other Sources</strong></p>
+      <p>We collect information from other companies and associate that with the information we collect about you. For example, in connection with your creation of an account, we may collect information about you from identity verification services, including your prior addresses and names. Also, if you use your credentials from a third-party social media service to log into your Services account, we may collect information from that service, such as your name and other account information, in accordance with the authorization procedures determined by that service.</p>
+      
+      <p><strong>Security</strong></p>
+      <p>Our Network takes reasonable measures designed to protect the information we collect from loss, theft, misuse, and unauthorized access, disclosure, alteration, and destruction. In particular, we implement reasonable security practices and procedures designed to protect the confidentiality and security of this information in accordance with, and prohibit disclosure other than as permitted by, this Policy.</p>
+      
+      <p><strong>Transfer of Information to the U.S. and Other Countries</strong></p>
+      <p>Our Network is based in the United States and the information we collect is governed by U.S. law. By accessing or using our Services or otherwise providing information to us, you consent to the processing and transfer of information in and to the U.S. and other countries, where you may not have the same rights as you do under local law.</p>
+      
+      <p><strong>Our Use of Personal Information</strong></p>
+      <p>We may use your information to:</p>
+      <p>To fulfill any other purpose for which you provide it.</p>
+      <p>Provide, maintain, and improve the Services;</p>
+      <p>Process transactions and send notices about your transactions;</p>
+      <p>Notify you about the changes to the Services and any other products or services we offer or provide;</p>
+      <p>Resolve disputes, troubleshoot problems, and provide customer service;</p>
+      <p>Prevent and investigate violations of our terms and conditions and protect the rights and property of Our Network and others;</p>
+      <p>Measure, analyze, and monitor trends, activities, and usage of the Services;</p>
+      <p>Personalize the Services, including by delivering targeted content or advertisements;</p>
+      <p>Send you targeted marketing and promotional offers we think will be of interest to you;</p>
+      <p>Verify your identity; and</p>
+      <p>Carry out any other purpose described to you at the time the information was collected.</p>
+      
+      <p><strong>Our Use of Other Information</strong></p>
+      <p>The information we collect automatically may include personal information, but we may maintain it or associate it with personal information we collect in other ways or receive from third parties. It helps us to improve our Services and to deliver a better and more personalized service, including by enabling us to:</p>
+      <p>Estimate our audience size and usage patterns.</p>
+      <p>Store information about your preferences, allowing us to customize our Services according to your individual interests.</p>
+      <p>Speed up your searches.</p>
+      <p>Recognize you when you return to our Services.</p>
+      
+      <p><strong>Sharing of Personal Information</strong></p>
+      <p>We may share information about you as follows:</p>
+      <p>With service providers that perform services on our behalf, including identity verification services, fraud prevention services, and email marketing services;</p>
+      <p>With other companies as permitted by law, including our contractors, service providers and other third parties, and for our everyday business purposes, such as to process transactions, maintain accounts, respond to court orders and legal investigations, or report to credit bureaus;</p>
+      <p>For any other purpose disclosed by us when you provide the information;</p>
+      <p>To comply with an applicable law or regulation, or in response to a request for information if we believe disclosure is in accordance with any applicable law, regulation, or legal process;</p>
+      <p>To protect against or prevent actual or potential fraud, unauthorized transactions, claims, or other liability;</p>
+      <p>To protect the rights, property, and safety of Our Network or others;</p>
+      <p>In connection with a proposed or actual sale, merger, transfer, reorganization, equity swap, refinancing or exchange of all or a portion of Our Network assets to another company; and</p>
+      <p>With your consent or at your direction, including if we notify you that the information you provide will be shared in a particular manner and you provide such information.</p>
+      <p>With our subsidiaries and affiliates.</p>
+      <p>We may also share aggregated or de-identified information, which cannot reasonably be used to identify you.</p>
+      <p>As ordered by any Governmental Authority or quasi-governmental authority, upon receipt of a legal order, subpoena or other legal process.</p>
+      <p>To enforce or apply our terms of use.</p>
+      <p>If we believe disclosure is necessary or appropriate to protect the rights, property, or safety of Our Network, our affiliates and subsidiaries, our customers, or others.</p>
+      <p>We may also include your information in the leads that are sold to fulfillment agencies in order to complete and deliver requested products and services. We do not sell your information to third parties, but only to fulfillment companies and agents that we work with to deliver requested products and services.</p>
+      
+      <p><strong>Social Sharing Features</strong></p>
+      <p>The Services may offer social sharing features and other integrated tools (such as the Facebook “Like” button), which let you share actions you take on our Services with other media, and vice versa. Your use of such features enables the sharing of information with your friends or the public, depending on the settings you establish with the entity that provides the social sharing feature. For more information about the purpose and scope of data collection and processing in connection with social sharing features, please visit the privacy policies of the entities that provide these features. By associating an account managed by a third party with your Our Network account and authorizing Our Network to have access to this information, you agree that Our Network may collect, store, and use this information in accordance with this Policy.</p>
+      
+      <p><strong>Zoom and Other Third-Party Services</strong></p>
+      <p>Based on data you give us, we will facilitate the use of Zoom or other video conferencing or telecommunication services to communicate with a customer, and respond to requests for support. The categories of data we obtain are used to deliver our services and provide a better experience for you. Please see Zoom’s privacy policy for details pertaining to this service and other privacy policy of the service providers as applicable. We do not fetch or store your personal Zoom meeting information or credentials. Our Network uses an access token to communicate with your account. When you deauthorize Our Network from your Zoom account, your token and related data is deleted. By associating an account managed by a third party with your Our Network account and authorizing Our Network to have access to this information, you agree that Our Network may collect, store, and use this information in accordance with this Policy.</p>
+      
+      <p><strong>Advertising and Analytics Services Provided by Others</strong></p>
+      <p>We may allow others to provide analytics services and serve advertisements on our behalf. These entities may use cookies, web beacons, device identifiers, and other technologies to collect information about your use of the Services and other websites and online services, including your IP address, web browser, mobile network information, pages viewed, time spent on pages or in apps, links clicked, and conversion information. This information may be used by Our Network and others to, among other things, analyze and track data, determine the popularity of certain content, deliver advertising and content targeted to your interests on our Services and other websites or online services, and better understand your online activity. You may be able to opt out of having third parties use your web browsing information for behavioral advertising purposes, by visiting www.aboutads.info/choices. You may also be able to opt out of having third parties use information collected through apps for behavioral advertising purposes by visiting your mobile device operating system settings.</p>
+      
+      <p><strong>Account Information</strong></p>
+      <p>You may access and update your account profile information by logging into your account via our Services. When you close your account, we may retain certain information as required by law or for our legitimate business purposes. We may also retain cached or archived copies of information about you for a certain period of time.</p>
+      
+      <p><strong>Promotional Communications</strong></p>
+      <p>You may opt out of receiving promotional communications from Our Network by following the instructions in those messages. Please note that if you opt out, we may still send you transactional or relationship messages, such as those about your account or our ongoing business relations.</p>
+      
+      <p><strong>Location Information</strong></p>
+      <p>If you initially consent to the collection of precise location information by Our Network via our mobile app, you should be able to subsequently stop this collection through your device operating system settings or by removing our mobile app from your device. You understand and agree that disabling location information may limit the Services available to you.</p>
+      
+      <p><strong>Cookies and Local Storage</strong></p>
+      <p>Most web browsers are set to accept cookies and local storage by default. If you prefer, you can usually choose to set your browser to remove browser cookies or clear local storage. Please note that if you choose to remove or reject these technologies, this could affect the availability and functionality of our Services.</p>
+      
+      <p><strong>Mobile Push Notifications/Alerts</strong></p>
+      <p>With your consent, we may send promotional and non-promotional push notifications or alerts to your mobile device. You should be able to stop receiving these messages by changing the notification settings on your mobile device.</p>
+      
+      <p><strong>Tracking Technologies</strong></p>
+      <p>We strive to provide you with choices regarding the personal information you provide to us. We have created mechanisms to provide you with the following control over your information:</p>
+      <p>Tracking Technologies and Advertising. You can set your browser to refuse all or some browser cookies, or to alert you when cookies are being sent. If you disable or refuse cookies, please note that some parts of this site may then be inaccessible or not function properly.</p>
+      <p>Disclosure of Your Information for Third-Party Advertising. If you do not want us to share your personal information with unaffiliated or non-agent third parties for promotional purposes, you can opt-out by checking the relevant box located on the form on which we collect your data (if applicable). You can also always opt-out by logging into the Services and adjusting your user preferences in your account profile (if applicable).</p>
+      <p>Promotional Offers from the Company. If you do not wish to have your email address and other contact information used by the Company to promote our own or third parties’ products or services, you can opt-out by checking the relevant box located on the form on which we collect your data by logging into the Services and adjusting your user preferences in your account profile by checking or unchecking the relevant boxes or by sending us an email stating your request to the addresses provided at the end of this Policy. If we have sent you a promotional email, you may send us a return email asking to be omitted from future email distributions. This opt out does not apply to information provided to the Company as a result of a product purchase, warranty registration, product service experience or other transactions.</p>
+      <p>We do not control third parties’ collection or use of your information to serve interest-based advertising. However these third parties may provide you with ways to choose not to have your information collected or used in this way. You can opt out of receiving targeted ads from members of the Network Advertising Initiative (“NAI”) on the NAI’s website.</p>
+      <p>Residents of certain states, such as California, Nevada, Colorado, Virginia, and Utah may have additional personal information rights and choices. See Your State Privacy Rights for more information.</p>
+      
+      <p><strong>Accessing and Correcting Your Information</strong></p>
+      <p>You can review and change your personal information by logging into the Services and visiting your account profile page.</p>
+      <p>You may also send us an email at our address at the end of this Policy to request access to, correct or delete any personal information that you have provided to us. We cannot delete your personal information except by also deleting your user account. We may not accommodate a request to change information if we believe the change would violate any law or legal requirement or cause the information to be incorrect.</p>
+      
+      <p><strong>Additional Information for California Users</strong></p>
+      <p>If you are a California resident, you have additional rights under the California Consumer Privacy Act (CCPA), including the right to request access to or deletion of your personal information, and information about our data practices, as well as the right not to be discriminated against for exercising your privacy rights. To exercise such rights, please contact us at the address listed at the bottom of this Policy.</p>
+      <p>The CCPA sets forth certain obligations for businesses that “sell” personal information. Based on the definition of “sell” under the CCPA and under current regulatory guidance, we may have sold the following categories of information about you in the past twelve months: Identifiers (such as name, address, email address, IP address, or device identifiers); internet or other network or device activity; geolocation information; professional or employment related data; potentially protected classifications (such as gender, nationality, and age); physical characteristics or description (such as when you voluntarily submit a photo through our Services); inferences related to the information identified.</p>
+      
+      <p><strong>Data Security</strong></p>
+      <p>We have implemented measures designed to secure your personal information from accidental loss and from unauthorized access, use, alteration, and disclosure. All information you provide to us is stored on our secure servers behind firewalls. Any payment transactions will be encrypted using SSL technology.</p>
+      <p>The safety and security of your information also depends on you. Where we have given you (or where you have chosen) a password for access to certain parts of our Services, you are responsible for keeping this password confidential. We ask you not to share your password with anyone. We urge you to be careful about giving out information in public areas of the Services like message boards. The information you share in public areas may be viewed by any user of the Services.</p>
+      <p>Unfortunately, the transmission of information via the internet is not completely secure. Although we do our best to protect your personal information, we cannot guarantee the security of your personal information transmitted to our Services. Any transmission of personal information is at your own risk. We are not responsible for circumvention of any privacy settings or security measures contained on the Services.</p>
+    </div>
+  </div>
+
+  <div id="modal-tos" class="modal" style="display: none;">
+      <div class="modal-content">
+          <div class="modal-close-btn">✕</div>
+          <h3>Terms and Conditions</h3>
+          <p><strong>Last Updated: May 13, 2025</strong></p>
+
+            <p><strong>1. Acceptance of Terms</strong></p>
+            <p>By accessing or using this website, applications, or services (collectively, “Services”), you agree to be bound by these Terms of Service (“Terms”). If you do not agree to all of these Terms, you must not access or use the Services.</p>
+            
+            <p><strong>2. Changes to Terms</strong></p>
+            <p>this website may modify these Terms at any time by posting revised Terms on this page. Your continued use of the Services after the effective date of any changes constitutes your acceptance of the new Terms. Please review this page regularly.</p>
+            
+            <p><strong>3. Privacy Policy</strong></p>
+            <p>Your use of the Services is also governed by our Privacy Policy, which is incorporated into these Terms by reference. Please review the Privacy Policy to learn about our data practices.</p>
+            
+            <p><strong>4. Eligibility</strong></p>
+            <p>You must be at least 18 years old to use the Services. By using the Services, you represent and warrant that you meet this age requirement and have the legal capacity to enter into these Terms.</p>
+            
+            <p><strong>5. Account Registration</strong></p>
+            <p>To access certain features of the Services, you may be required to register for an account. You agree to provide accurate, current, and complete information during registration and to update such information to keep it accurate. You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account.</p>
+            
+            <p><strong>6. License to Use the Services</strong></p>
+            <p>Subject to your compliance with these Terms, this website grants you a limited, non-exclusive, non-transferable, revocable license to access and use the Services for your personal or internal business purposes.</p>
+            
+            <p><strong>7. User Content</strong></p>
+            <p>You retain ownership of any content you submit or post through the Services (“User Content”). By posting User Content, you grant this website a worldwide, royalty-free, transferable license to use, reproduce, distribute, prepare derivative works of, display, and perform such content in connection with the Services.</p>
+            
+            <p><strong>8. Prohibited Conduct</strong></p>
+            <p>You agree not to:</p>
+            <p>— Violate any applicable law or regulation;</p>
+            <p>— Infringe the rights of this website or any third party;</p>
+            <p>— Interfere with or disrupt the operation of the Services;</p>
+            <p>— Use the Services for unauthorized or harmful purposes, including transmitting malware;</p>
+            <p>— Attempt to gain unauthorized access to any portion of the Services or other accounts, systems, or networks connected to the Services.</p>
+            
+            <p><strong>9. Fees and Payments</strong></p>
+            <p>Some features of the Services may be subject to fees. If you elect to use paid features, you agree to pay all applicable fees and taxes. All payments are non-refundable except as required by law or explicitly stated otherwise.</p>
+            
+            <p><strong>10. Termination</strong></p>
+            <p>this website may suspend or terminate your access to the Services at any time, with or without cause or notice. You may terminate your account at any time by following the procedures in your account settings.</p>
+            
+            <p><strong>11. Disclaimer of Warranties</strong></p>
+            <p>The Services are provided “AS IS” and “AS AVAILABLE,” without warranties of any kind, express or implied. this website disclaims all warranties, including merchantability, fitness for a particular purpose, and non-infringement.</p>
+            
+            <p><strong>12. Limitation of Liability</strong></p>
+            <p>To the maximum extent permitted by law, this website will not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or related to your use of the Services.</p>
+            
+            <p><strong>13. Indemnification</strong></p>
+            <p>You agree to indemnify and hold harmless this website and its officers, directors, employees, and agents from any claims, liabilities, damages, losses, or expenses arising out of your breach of these Terms, your User Content, or your violation of any law or the rights of a third party.</p>
+            
+            <p><strong>14. Governing Law and Dispute Resolution</strong></p>
+            <p>These Terms are governed by and construed in accordance with the laws of the State of California, without regard to conflict of law principles. Any dispute arising out of or relating to these Terms or the Services will be resolved exclusively in the state or federal courts located in San Francisco County, California.</p>
+            
+            <p><strong>15. Severability</strong></p>
+            <p>If any provision of these Terms is held to be invalid or unenforceable, that provision will be struck and the remaining provisions will remain in full force and effect.</p>
+            
+            <p><strong>16. Entire Agreement</strong></p>
+            <p>These Terms, together with the Privacy Policy and any other legal notices published by this website, constitute the entire agreement between you and the website regarding the Services.</p>
+      </div>
+  </div>
+
+    <div class="home-container">&nbsp;</div>
+    <footer>
+        <div class="container">
+            <div class="footWrapper">
+                <div class="footLinksWrapper">
+                    <div class="footLinks">
+                        <a href="javascript:void(0)" onclick="openPolicyModal()">Privacy Policy</a>
+                        <a href="javascript:void(0)" onclick="openTosModal()">Terms of Use</a>
+                        <a href="mailto:info@<?php echo $domain; ?>">Contact Us</a>
+                    </div>
+                    <div class="copyRight">
+                        <p>© 2025 All rights reserved.</p>
+                    </div>
+                </div>
+                <!--<hr>-->
+                <!--<p><strong>Disclaimer:</strong> By placing this call you are agreeing that the phone number you're-->
+                <!--    calling from may be contacted by-->
+                <!--    <a href="">Lower Bills USA</a> regarding your inquiry and with related offers, by phone call or text-->
+                <!--    message. Msg. and data rates apply. You are not required to opt in as a condition of purchase.-->
+                <!--</p>-->
+            </div>
+        </div>
+    </footer>
+    
+    <!-- TrustedForm -->
+    <script type="text/javascript">
+      (function() {
+        var tf = document.createElement('script');
+        tf.type = 'text/javascript';
+        tf.async = true;
+        tf.src = ("https:" == document.location.protocol ? 'https' : 'http') +
+          '://api.trustedform.com/trustedform.js?field=xxTrustedFormCertUrl&use_tagged_consent=true&l=' +
+          new Date().getTime() + Math.random();
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(tf, s);
+      })();
+    </script>
+    <noscript>
+      <img src='https://api.trustedform.com/ns.gif' />
+    </noscript>
+    <!-- End TrustedForm -->
+    
+    <script id="LeadiDscript" type="text/javascript">
+      (function() {
+        var s = document.createElement('script');
+        s.id = 'LeadiDscript_campaign';
+        s.type = 'text/javascript';
+        s.async = true;
+        s.src = '//create.lidstatic.com/campaign/af33a750-123d-fa00-dc1b-a5e61e79d270.js?snippet_version=2';
+        var LeadiDscript = document.getElementById('LeadiDscript');
+        LeadiDscript.parentNode.insertBefore(s, LeadiDscript);
+      })();
+    </script>
+    <noscript><img src='//create.leadid.com/noscript.gif?lac=7F65975C-84E7-8EEC-10A7-E77D2941A08C&lck=af33a750-123d-fa00-dc1b-a5e61e79d270&snippet_version=2' /></noscript>
+    
+      <script>
+        const policyModal = document.querySelector("#modal-policy");
+        const tosModal = document.querySelector("#modal-tos");
+        
+        function openPolicyModal() {
+          policyModal.style.display = "block";
+        }
+      
+        function openTosModal() {
+          tosModal.style.display = "block";
+        }
+      
+        function closeModals () {
+          policyModal.style.display = "none";
+          tosModal.style.display = "none";
+        }
+          
+        document.addEventListener("DOMContentLoaded", function() {
+          policyModal.addEventListener('click', function(event) {
+              closeModals();
+          });
+          
+          tosModal.addEventListener('click', function(event) {
+              closeModals();
+          });
+        });
+      </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="build/js/intlTelInput.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
+    <script src="js/slick.js"></script>
+    <script src="js/main.js?v=1.185"></script>
+    <script>
+      const email = document.querySelector('#email');
+      const phone_number = document.querySelector('#number');
+      const leaseBtn = document.querySelector('#leaseBtn');
+      const financeBtn = document.querySelector('#financeBtn');
+
+      email.addEventListener('change', (e) => {
+        email.
+      });
+      phone_number.addEventListener('change', (e) => {
+        handleChange(e.target);
+      });
+    </script>
+    
+    <script>
+        function sendData(data) {
+          return fetch('/api/send-to-sheet.php', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(data)
+          });
+        }
+    </script>
+    
+    <script>
+        const formData = {
+            first_name: 'test',
+            last_name: 'test2',
+            email: '',
+            phone_number: '',
+            offer_type: '', // finance | lease
+            params: window.location.search ? window.location.search.substring(1) : '',
+            // jornaya_leadid: 'leadid_token',
+            // trustedform_token: 'xxTrustedFormToken',
+            // trustedform_cert_url: "xxTrustedFormCertUrl",
+        };
+        
+        function getHiddenInputs() {
+            return {
+                jornaya_leadid: document.querySelector('#leadid_token')?.value || '',
+                trustedform_token: document.querySelector('input[name="xxTrustedFormToken"]')?.value || '',
+                trustedform_cert_url: document.querySelector('input[name="xxTrustedFormCertUrl"]')?.value || '',
+                xxTrustedFormPingUrl: document.querySelector('input[name="xxTrustedFormPingUrl"]')?.value || '',
+            }
+        }
+        
+        function handleChange(el) {
+            const key = el.dataset.name;
+            let value = '';
+        
+            if (el.dataset.value) {
+              value = el.dataset.value;
+            } else if ('value' in el) {
+              value = el.value;
+            } else {
+              value = el.textContent.trim();
+            }
+            formData[key] = value;
+            // console.log(formData);
+        }
+        
+        function sendToSheet() {
+            console.log({...formData, ...getHiddenInputs() });
+            sendData({...formData, ...getHiddenInputs() });
+        }
+    </script>
+
+    <script>
+      $("#number").on("input", function () {
+  $(this).val(
+    $(this)
+      .val()
+      .replace(/[^0-9]/g, "")
+  );
+});
+const ANIMATION_DURATION = 400;
+
+// $(".form-container").one("click", function () {
+//   $("html, body").animate(
+//     { scrollTop: $(this).offset().top - 100 },
+//     400
+//   );
+// });
+$(function () {
+  let fired = false;
+  $('.form-container').on('click', function () {
+    if (fired) return;
+    fired = true;
+    $('html, body').animate(
+      { scrollTop: $('.form-container').offset().top - 400 },
+      400
+    );
+  });
+});
+
+function validateStep1() {
+  let valid = true;
+
+  const firstName = $("#first-name").val();
+  const lastName = $("#last-name").val();
+
+  if (!firstName || firstName.length < 2) {
+    $("#first-name-error")
+      .text(
+        firstName
+          ? "First name must be at least 2 characters"
+          : "First name is required"
+      )
+      .css("display", "block");
+    valid = false;
+  } else {
+    $("#first-name-error").text("").css("display", "none");
+  }
+
+  if (!lastName || lastName.length < 2) {
+    $("#last-name-error")
+      .text(
+        lastName
+          ? "Last name must be at least 2 characters"
+          : "Last name is required"
+      )
+      .css("display", "block");
+    valid = false;
+  } else {
+    $("#last-name-error").text("").css("display", "none");
+  }
+
+  return valid;
+}
+
+function validateStep2() {
+  let valid = true;
+
+  const email = $("#email").val();
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const number = $("#number").val();
+  const numberPattern = /^[0-9]+$/;
+
+  const leaseBtn = $("#leaseBtn");
+  const financeBtn = $("#financeBtn");
+
+  if (!email || !emailPattern.test(email)) {
+    $("#email-error")
+      .text(email ? "Valid email is required" : "Email is required")
+      .css("display", "block");
+    valid = false;
+    financeBtn.prop("disabled", true);
+    leaseBtn.prop("disabled", true);
+  } else {
+    $("#email-error").text("").css("display", "none");
+    financeBtn.prop("disabled", false);
+    leaseBtn.prop("disabled", false);
+  }
+
+  if (!number || !numberPattern.test(number)) {
+    $("#number-error")
+      .text(
+        number
+          ? "Phone Number must contain only digits"
+          : "Phone Number is required"
+      )
+      .css("display", "block");
+    valid = false;
+  } else {
+    $("#number-error").text("").css("display", "none");
+  }
+
+  return valid;
+}
+
+function handleInputValidation() {
+  $("#first-name, #last-name").on("keyup", validateStep1);
+  $("#email, #number").on("keyup", validateStep2);
+}
+
+function animateStepTransition(currentStep, nextStep) {
+  $(".form-step.active").animate(
+    {
+      opacity: 0,
+      left: "-100%",
+      boxShadow: "0 0 0 rgba(0, 0, 0, 0)",
+    },
+    ANIMATION_DURATION,
+    function () {
+      $(this).removeClass("active").hide();
+
+      $("#step-" + nextStep)
+        .css({
+          left: "100%",
+          display: "block",
+          opacity: 0,
+        })
+        .animate(
+          {
+            opacity: 1,
+            left: "0",
+          },
+          ANIMATION_DURATION,
+          function () {
+            $(this).addClass("active");
+          }
+        );
+    }
+  );
+}
+
+function nextStep(step) {
+  let valid = true;
+
+  if (step === 2) {
+    valid = validateStep1();
+  } else if (step === 3) {
+    valid = validateStep2();
+  }
+
+  if (valid) {
+    const currentStepHeight = $(".form-step.active").outerHeight();
+    const nextStepHeight = $("#step-" + step).outerHeight();
+    $(".form-container").animate(
+      {
+        height: nextStepHeight,
+      },
+      100
+    );
+    
+    animateStepTransition(step - 1, step);
+    if (step === 3) {
+        $("body,html").animate(
+          {
+            scrollTop: 0,
+          },
+          1000
+        );
+      setTimeout(() => {
+            confetti();
+    }, 500);
+    }
+  } else {
+    const currentStepHeight = $(".form-step.active").outerHeight();
+    $(".form-container").animate(
+      {
+        height: currentStepHeight,
+      },
+      100
+    );
+  }
+
+}
+function animateStepTransition(currentStep, nextStep) {
+  $(".form-step.active").animate(
+    {
+      opacity: 0,
+      left: "-100%",
+      boxShadow: "0 0 0 rgba(0, 0, 0, 0)", // Reduce box-shadow
+    },
+    ANIMATION_DURATION,
+    function () {
+      $(this).removeClass("active").hide();
+
+      $("#step-" + nextStep)
+        .css({
+          left: "100%",
+          display: "block",
+          opacity: 0,
+        })
+        .animate(
+          {
+            opacity: 1,
+            left: "0",
+          },
+          ANIMATION_DURATION,
+          function () {
+            $(this).addClass("active");
+          }
+        );
+    }
+  );
+}
+$(document).ready(function () {
+  const initialStepHeight = $(".form-step.active").outerHeight();
+  $(".form-container").css("height", initialStepHeight);
+
+  handleInputValidation(); // Initialize input validation on keyup
+});
+var input = document.querySelector("#number");
+window.intlTelInput(input, {
+  allowDropdown: false,
+  initialCountry: "US",
+  separateDialCode: true,
+});
+
+$(".reviewSlider").slick({
+  slidesToShow: 3,
+  slidesToScroll: 1,
+  centerMode: false,
+  arrows: true,
+  infinite: true,
+  dots: true,
+  autoplay: true,
+  autoplaySpeed: 4000,
+  responsive: [
+    {
+      breakpoint: 1024,
+      settings: {
+        slidesToShow: 2,
+      },
+    },
+    {
+      breakpoint: 600,
+      settings: {
+        arrows: false,
+        slidesToShow: 1,
+      },
+    },
+  ],
+});
+    </script>
+</body>
+
+</html>

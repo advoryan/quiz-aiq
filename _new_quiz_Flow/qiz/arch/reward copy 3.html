@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Exclusive Offer — Unlock Your Reward</title>
+    <meta name="description" content="Exclusive Offer - Claim your reward" />
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { theme: { extend: { colors: { primary: '#2563eb' } } } };
+    </script>
+
+    <!-- Dynamic lightweight polyfill loader (avoids polyfill.io dependency) -->
+    <script>
+    (function(){
+      if(!document.head) return;
+      const need = { core:false, fetch:false, io:false, ro:false };
+      if(!window.Promise || !window.Symbol || !Object.assign || !Array.prototype.flat || !window.Map || !window.Set) need.core = true;
+      if(!('fetch' in window) || !('AbortController' in window)) need.fetch = true;
+      if(!('IntersectionObserver' in window)) need.io = true;
+      if(!('ResizeObserver' in window)) need.ro = true;
+      function add(src){ const s=document.createElement('script'); s.src=src; s.defer=false; s.crossOrigin='anonymous'; document.head.appendChild(s); }
+      if(need.core) add('https://cdn.jsdelivr.net/npm/core-js-bundle@3.38.0/minified.js');
+      if(need.fetch) add('https://cdn.jsdelivr.net/npm/whatwg-fetch@3.6.20/dist/fetch.umd.min.js');
+      if(need.io) add('https://cdn.jsdelivr.net/npm/intersection-observer@0.12.2/intersection-observer.js');
+      if(need.ro) add('https://cdn.jsdelivr.net/npm/resize-observer-polyfill@1.5.1/dist/ResizeObserver.global.js');
+      if(!('queueMicrotask' in window)) window.queueMicrotask = cb => Promise.resolve().then(cb);
+    })();
+    </script>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <!-- TrustedForm & Jornaya placeholders (replace with your production snippets) -->
+    <!-- TrustedForm (example) -->
+    <script>
+      (function(){
+        // create trusted form token input early so scripts can populate it
+        var tf = document.createElement('input'); tf.type='hidden'; tf.id='xxTrustedFormToken'; tf.name='xxTrustedFormToken'; document.head.appendChild(tf);
+        // load TrustedForm script (replace query params for production)
+        var s = document.createElement('script'); s.async = true; s.src = 'https://api.trustedform.com/trustedform.js?field=xxTrustedFormToken'; document.head.appendChild(s);
+      })();
+    </script>
+    <!-- Jornaya / LeadiD placeholder: replace src with your snippet URL -->
+    <script>
+      (function(){
+        var s=document.createElement('script'); s.async=true; s.src='https://create.lidstatic.com/campaign/YOUR_CAMPAIGN.js?snippet_version=2'; s.id='LeadiDscript_campaign'; document.head.appendChild(s);
+      })();
+    </script>
+
+    <style>
+      /* small custom tweaks */
+      body { -webkit-font-smoothing:antialiased; }
+
+      /* Page &larr; Background using the local bg.svg placed in the same folder as this page */
+      html, body { height: 100%; }
+      body {
+        background-image: url('bg.svg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-color: #0f2c56; /* fallback background color */
+      }
+
+      /* subtle dim overlay for better card contrast; card is elevated above it */
+      #app::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: rgba(5,10,25,0.32);
+        pointer-events: none;
+        z-index: 0;
+      }
+      /* ensure the card is above the overlay */
+      #app > div { position: relative; z-index: 1; }
+
+  /* progress bar styling */
+  .progress-track { background: rgba(229,231,235,1); height: 8px; border-radius: 9999px; overflow: hidden; }
+  .progress-fill { background: linear-gradient(90deg,#16a34a,#10b981); height: 100%; width: 0%; transition: width 360ms cubic-bezier(.2,.8,.2,1); }
+  .progress-label { font-size: 12px; color: rgba(15,23,42,0.85); }
+  .progress-track { cursor: pointer; }
+  /* directional sliding panels */
+  .step-panel { position: relative; }
+  .step-panel.from-right { transform: translateX(48px); opacity:0; }
+  .step-panel.from-left { transform: translateX(-48px); opacity:0; }
+  .step-panel.slide-active { transform: translateX(0); opacity:1; transition: transform .42s cubic-bezier(.4,.8,.2,1), opacity .42s; will-change: transform, opacity; }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900">
+    <div id="app" class="min-h-screen flex items-center justify-center p-4">
+      <div class="w-full max-w-lg bg-white rounded-2xl shadow-lg border border-slate-200">
+        <div class="p-5 sm:p-6 text-center">
+          <h1 class="text-2xl font-bold text-slate-900">Exclusive Offer!</h1>
+          <div class="mt-4 flex items-center justify-center gap-3">
+            <!-- Item icon -->
+            <div class="p-3 bg-primary/10 text-primary rounded-lg">
+              <!-- <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v6" stroke-width="1.5"/><circle cx="12" cy="14" r="6" stroke-width="1.5"/></svg> -->
+              <svg width="30px" height="30px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.0011 17.3498C12.9013 17.3498 13.6311 16.6201 13.6311 15.7198C13.6311 14.8196 12.9013 14.0898 12.0011 14.0898C11.1009 14.0898 10.3711 14.8196 10.3711 15.7198C10.3711 16.6201 11.1009 17.3498 12.0011 17.3498Z" fill="#292D32"/>
+                <path d="M16.65 9.44H7.35C7.27 9.44 7.2 9.44 7.12 9.44V8.28C7.12 5.35 7.95 3.4 12 3.4C16.33 3.4 16.88 5.51 16.88 7.35C16.88 7.74 17.19 8.05 17.58 8.05C17.97 8.05 18.28 7.74 18.28 7.35C18.28 3.8 16.17 2 12 2C6.37 2 5.72 5.58 5.72 8.28V9.53C2.92 9.88 2 11.3 2 14.79V16.65C2 20.75 3.25 22 7.35 22H16.65C20.75 22 22 20.75 22 16.65V14.79C22 10.69 20.75 9.44 16.65 9.44ZM12 18.74C10.33 18.74 8.98 17.38 8.98 15.72C8.98 14.05 10.34 12.7 12 12.7C13.66 12.7 15.02 14.06 15.02 15.72C15.02 17.39 13.67 18.74 12 18.74Z" fill="#292D32"/>
+              </svg>
+            </div>
+            <div class="text-left">
+              <div class="text-sm font-semibold">Unlock Your Reward</div>
+              <div class="text-xs text-slate-500">FREE Shipping Included</div>
+            </div>
+          </div>
+
+          <div v-show="step === 1" class="mt-6 bg-slate-50 p-4 rounded-lg">
+            <div class="text-sm text-slate-600">Total Amount Awarded</div>
+            <div class="mt-2 text-3xl font-extrabold text-amber-600">${{ animatedAmount.toLocaleString() }}</div>
+            <div class="text-xs text-slate-500 mt-1">Estimated prize — numbers roll up from 1,000,000</div>
+          </div>
+
+          <p v-show="step === 1" class="mt-4 text-sm text-slate-700">Will you be next? Enter your email so we can contact you.</p>
+
+          <!-- Progress bar (visible across steps) -->
+          <div class="mt-4 w-full px-6">
+            <div class="flex items-center justify-between mb-2">
+              <div class="progress-label">Progress</div>
+              <div class="text-xs text-slate-500">{{ Math.round(progressPercent) }}%</div>
+            </div>
+            <div class="progress-track" role="progressbar" :aria-valuenow="Math.round(progressPercent)" aria-valuemin="0" aria-valuemax="100" @click="gotoByClick($event)">
+              <div class="progress-fill" :style="{ width: progressPercent + '%' }" aria-hidden="true"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="p-5 sm:p-6 pt-4 border-t border-slate-100">
+          <!-- Steps -->
+          <form @submit.prevent class="space-y-4" autocomplete="on" name="reward-form">
+            <!-- Step 1: Email intake -->
+            <div v-show="step === 1" class="step-panel" data-step="1">
+              <label class="block text-sm text-slate-700">Email</label>
+              <input v-model="data.email" @input="clearError('email')" type="email" required class="mt-1 w-full rounded-lg border border-slate-200 px-4 py-3 text-sm" placeholder="you@example.com" autocomplete="email"/>
+              <div v-if="errors.email" class="mt-1 text-xs text-rose-600">{{ errors.email }}</div>
+              <div class="mt-8 flex gap-2">
+                <button type="button" @click="next('email')" :disabled="!isValid('email')" :aria-disabled="!isValid('email')" :class="['flex-1 inline-flex justify-center items-center gap-2 px-4 py-3 rounded-lg bg-primary text-white', !isValid('email') ? 'opacity-50 cursor-not-allowed' : '']">Continue</button>
+              </div>
+              <div class="mt-3 text-xs text-slate-600">
+                By clicking Continue, I agree to receive marketing and promotional emails from <strong>{{ domain }}</strong> and our partners. I also agree to the <a href="#" class="underline text-primary">Terms &amp; Conditions</a>, including mandatory arbitration, <a href="#" class="underline text-primary">Privacy Policy</a> and site recordation by TrustedForm and Jornaya.
+              </div>
+            </div>
+
+            <!-- Step 2: Personal info -->
+            <div v-show="step === 2" class="step-panel" data-step="2">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label class="text-sm text-slate-700">
+                  <div class="mb-1">First Name</div>
+                  <input v-model="data.first" @input="clearError('first')" type="text" name="given-name" autocomplete="given-name" class="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm" />
+                  <div v-if="errors.first" class="mt-1 text-xs text-rose-600">{{ errors.first }}</div>
+                </label>
+                <label class="text-sm text-slate-700">
+                  <div class="mb-1">Last Name</div>
+                  <input v-model="data.last" @input="clearError('last')" type="text" name="family-name" autocomplete="family-name" class="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm" />
+                  <div v-if="errors.last" class="mt-1 text-xs text-rose-600">{{ errors.last }}</div>
+                </label>
+              </div>
+
+              <div class="mt-3 grid grid-cols-3 gap-2">
+                <select v-model="data.dobMonth" name="bday-month" autocomplete="bday-month" class="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                  <option disabled value="">Month</option>
+                  <option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option>
+                </select>
+                <select v-model="data.dobDay" name="bday-day" autocomplete="bday-day" class="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                  <option disabled value="">Day</option>
+                  <option>01</option><option>02</option><option>03</option>
+                </select>
+                <select v-model="data.dobYear" name="bday-year" autocomplete="bday-year" @change="clearError('dobYear')" class="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                  <option disabled value="">Year</option>
+                  <option>1980</option><option>1990</option><option>2000</option>
+                </select>
+                <div v-if="errors.dobYear" class="mt-1 text-xs text-rose-600">{{ errors.dobYear }}</div>
+              </div>
+
+              <label class="block text-sm text-slate-700 mt-3">Gender</label>
+              <select v-model="data.gender" name="gender" autocomplete="sex" class="mt-1 w-full rounded-lg border border-slate-200 px-4 py-3 text-sm">
+                <option value="">Prefer not to say</option>
+                <option>Female</option>
+                <option>Male</option>
+              </select>
+
+              <div class="mt-8 flex gap-2">
+                <button type="button" @click="prev" class="rounded-lg border px-4 py-3">&larr; Back</button>
+                <button type="button" @click="next('personal')" :disabled="!isValid('personal')" :aria-disabled="!isValid('personal')" :class="['flex-1 rounded-lg bg-primary text-white px-4 py-3', !isValid('personal') ? 'opacity-50 cursor-not-allowed' : '']">Continue</button>
+              </div>
+            </div>
+
+            <!-- Step 3: Address with ZIP autofill (Zippopotamus free API) -->
+            <div v-show="step === 3" class="step-panel" data-step="3">
+              <label class="block text-sm text-slate-700">Street Address</label>
+              <input v-model="data.street" @input="clearError('street')" type="text" name="street-address" autocomplete="street-address" class="mt-1 w-full rounded-lg border border-slate-200 px-4 py-3 text-sm" placeholder="123 Main St" />
+              <div v-if="errors.street" class="mt-1 text-xs text-rose-600">{{ errors.street }}</div>
+
+              <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input v-model="data.zip" @blur="lookupZip" @input="clearError('zip')" type="text" name="postal-code" autocomplete="postal-code" placeholder="ZIP" class="rounded-lg border border-slate-200 px-4 py-3 text-sm" />
+                <input v-model="data.city" type="text" name="address-level2" autocomplete="address-level2" placeholder="City" class="rounded-lg border border-slate-200 px-4 py-3 text-sm" />
+                <input v-model="data.state" type="text" name="address-level1" autocomplete="address-level1" placeholder="State" class="rounded-lg border border-slate-200 px-4 py-3 text-sm" />
+              </div>
+
+              <div class="mt-2 text-xs text-slate-500">We try to autofill city/state from ZIP using a free public API.</div>
+
+              <div class="mt-8 flex gap-2">
+                <button type="button" @click="prev" class="rounded-lg border px-4 py-3">&larr; Back</button>
+                <button type="button" @click="next('address')" :disabled="!isValid('address')" :aria-disabled="!isValid('address')" :class="['flex-1 rounded-lg bg-primary text-white px-4 py-3', !isValid('address') ? 'opacity-50 cursor-not-allowed' : '']">Continue</button>
+              </div>
+            </div>
+
+            <!-- Step 4: Phone + TCPA -->
+            <div v-show="step === 4" class="step-panel" data-step="4">
+              <label class="block text-sm text-slate-700">Phone</label>
+              <input v-model="data.phone" @input="clearError('phone')" type="tel" name="tel" autocomplete="tel" placeholder="555-555-5555" class="mt-1 w-full rounded-lg border border-slate-200 px-4 py-3 text-sm" />
+              <div v-if="errors.phone" class="mt-1 text-xs text-rose-600">{{ errors.phone }}</div>
+
+              <div class="mt-3 text-xs text-slate-600 leading-snug">
+                By selecting "Continue", I provide my ESIGN signature and express consent for <strong>{{ domain }}</strong>, <a class="text-primary underline" href="https://unified-marketingpartners.com/subsidiaries2" target="_blank">https://unified-marketingpartners.com/subsidiaries2</a>, USMsg, MyJobMobile, Grant-Navigators, OMG Sweeps, Best Day Ever Sweepstakes, FamilyRecoveryHub and Dollar-Sensei to contact me at the phone number I provided for marketing and transactional messages via text and calls, which may use automated, manual, prerecorded, or AI technology, until I revoke consent. This applies even if my number is on a “Do Not Call” list. Consent is not required to use this site or obtain goods/services. Click here to proceed without consent. I have read and agree to the Terms &amp; Conditions, including mandatory arbitration, for resolving disputes and TCPA claims.
+              </div>
+
+              <div class="mt-8 flex gap-2">
+                <button type="button" @click="prev" class="rounded-lg border px-4 py-3">&larr; Back</button>
+                <button type="button" @click="finalize" :disabled="!isValid('phone')" :aria-disabled="!isValid('phone')" :class="['flex-1 rounded-lg bg-primary text-white px-4 py-3', !isValid('phone') ? 'opacity-50 cursor-not-allowed' : '']">Continue</button>
+              </div>
+            </div>
+
+            <!-- Step 5: Feeling lucky -->
+            <div v-show="step === 5" class="step-panel" data-step="5">
+              <div class="text-sm font-medium text-slate-700">Are you feeling lucky today?</div>
+              <div class="mt-3 grid grid-cols-1 gap-2">
+                <button type="button" @click="answer('feeling_lucky','Yes')" class="w-full px-4 py-3 rounded-lg border">Yes</button>
+                <button type="button" @click="answer('feeling_lucky','No')" class="w-full px-4 py-3 rounded-lg border">No</button>
+              </div>
+              <input type="hidden" name="feeling_lucky" :value="answers.feeling_lucky || ''" />
+              <div class="mt-4 flex gap-2"><button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button></div>
+            </div>
+
+            <!-- Step 6: Checking account -->
+            <div v-show="step === 6" class="step-panel" data-step="6">
+              <div class="text-sm font-medium text-slate-700">Do you have an active checking account?</div>
+              <div class="mt-3 grid grid-cols-1 gap-2">
+                <button type="button" @click="answer('checking_account','Yes')" class="w-full px-4 py-3 rounded-lg border">Yes</button>
+                <button type="button" @click="answer('checking_account','No')" class="w-full px-4 py-3 rounded-lg border">No</button>
+              </div>
+              <input type="hidden" name="checking_account" :value="answers.checking_account || ''" />
+              <div class="mt-4 flex gap-2"><button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button></div>
+            </div>
+
+            <!-- Step 7: Employment status -->
+            <div v-show="step === 7" class="step-panel" data-step="7">
+              <div class="text-sm font-medium text-slate-700">What is your current employment status?</div>
+              <div class="mt-3 grid grid-cols-1 gap-2 text-sm">
+                <button type="button" @click="answer('employment_status','Employed')" class="w-full px-4 py-3 rounded-lg border">Employed</button>
+                <button type="button" @click="answer('employment_status','Unemployed')" class="w-full px-4 py-3 rounded-lg border">Unemployed</button>
+                <button type="button" @click="answer('employment_status','Disability')" class="w-full px-4 py-3 rounded-lg border">Disability</button>
+                <button type="button" @click="answer('employment_status','Retired')" class="w-full px-4 py-3 rounded-lg border">Retired</button>
+                <button type="button" @click="answer('employment_status','Student')" class="w-full px-4 py-3 rounded-lg border">Student</button>
+              </div>
+              <input type="hidden" name="employment_status" :value="answers.employment_status || ''" />
+              <div class="mt-4 flex gap-2"><button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button></div>
+            </div>
+
+            <!-- Step 8: Use reward -->
+            <div v-show="step === 8" class="step-panel" data-step="8">
+              <div class="text-sm font-medium text-slate-700">How do you plan to use your reward?</div>
+              <div class="mt-3 grid grid-cols-1 gap-2">
+                <button type="button" @click="answer('use_reward','Save It')" class="w-full px-4 py-3 rounded-lg border">Save It</button>
+                <button type="button" @click="answer('use_reward','Spend It')" class="w-full px-4 py-3 rounded-lg border">Spend It</button>
+                <button type="button" @click="answer('use_reward','Still Deciding')" class="w-full px-4 py-3 rounded-lg border">Still Deciding</button>
+              </div>
+              <input type="hidden" name="use_reward" :value="answers.use_reward || ''" />
+              <div class="mt-4 flex gap-2"><button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button></div>
+            </div>
+
+            <!-- Step 9: Stop sign (simple check) -->
+            <div v-show="step === 9" class="step-panel" data-step="9">
+              <div class="text-sm font-medium text-slate-700">What color is a stop sign?</div>
+              <div class="mt-3 grid grid-cols-1 gap-2">
+                <button type="button" @click="answer('stop_sign','Blue')" class="w-full px-4 py-3 rounded-lg border">Blue</button>
+                <button type="button" @click="answer('stop_sign','Yellow')" class="w-full px-4 py-3 rounded-lg border">Yellow</button>
+                <button type="button" @click="answer('stop_sign','Red')" class="w-full px-4 py-3 rounded-lg border">Red</button>
+                <button type="button" @click="answer('stop_sign','Green')" class="w-full px-4 py-3 rounded-lg border">Green</button>
+              </div>
+              <input type="hidden" name="stop_sign" :value="answers.stop_sign || ''" />
+              <div class="mt-4 flex gap-2"><button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button></div>
+            </div>
+
+            <!-- Step 10: Health Insurance -->
+            <div v-show="step === 10" class="step-panel" data-step="10">
+              <div class="text-sm font-medium text-slate-700">Which best describes your Health Insurance coverage? <span class="text-xs text-slate-500">(Optional)</span></div>
+              <div class="mt-3 grid grid-cols-1 gap-2 text-sm">
+                <button type="button" @click="answer('health_ins','Medicare')" class="w-full px-4 py-3 rounded-lg border">Medicare</button>
+                <button type="button" @click="answer('health_ins','Medicaid')" class="w-full px-4 py-3 rounded-lg border">Medicaid</button>
+                <button type="button" @click="answer('health_ins','Medicare & Medicaid')" class="w-full px-4 py-3 rounded-lg border">Medicare & Medicaid</button>
+                <button type="button" @click="answer('health_ins','Insurance through work')" class="w-full px-4 py-3 rounded-lg border">Insurance through work</button>
+                <button type="button" @click="answer('health_ins','Marketplace or Private Insurance')" class="w-full px-4 py-3 rounded-lg border">Marketplace or Private Insurance</button>
+                <button type="button" @click="answer('health_ins','Uninsured')" class="w-full px-4 py-3 rounded-lg border">Uninsured</button>
+                <button type="button" @click="answer('health_ins','Skip')" class="w-full px-4 py-3 rounded-lg border">Skip</button>
+              </div>
+              <input type="hidden" name="health_ins" :value="answers.health_ins || ''" />
+              <div class="mt-3 text-xs text-slate-600 leading-snug">By selecting any of the options above except "Skip," I provide my express written consent ... (consent text recorded)</div>
+              <div class="mt-4 flex gap-2"><button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button></div>
+            </div>
+
+            <!-- Step 11: Rent or Own -->
+            <div v-show="step === 11" class="step-panel" data-step="11">
+              <div class="text-sm font-medium text-slate-700">Do you rent or own your home?</div>
+              <div class="mt-3 grid grid-cols-1 gap-2">
+                <button type="button" @click="answerAndMaybeBranch('home_ownership','Rent','rent')" class="w-full px-4 py-3 rounded-lg border">Rent</button>
+                <button type="button" @click="answerAndMaybeBranch('home_ownership','Own','own')" class="w-full px-4 py-3 rounded-lg border">Own</button>
+              </div>
+              <input type="hidden" name="home_ownership" :value="answers.home_ownership || ''" />
+              <div class="mt-4 flex gap-2"><button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button></div>
+            </div>
+
+            <!-- Step 12: Home improvement (Own branch) -->
+            <div v-show="step === 12" class="step-panel" data-step="12">
+              <div class="text-sm font-medium text-slate-700">Which home improvement projects are you considering? (select any)</div>
+              <div class="mt-3 grid grid-cols-1 gap-2">
+                <label class="inline-flex items-center"><input type="checkbox" @change="toggleChoice('home_projects','windows')"> <span class="ml-2">Windows</span></label>
+                <label class="inline-flex items-center"><input type="checkbox" @change="toggleChoice('home_projects','roofing')"> <span class="ml-2">Roofing</span></label>
+                <label class="inline-flex items-center"><input type="checkbox" @change="toggleChoice('home_projects','bathroom_remodel')"> <span class="ml-2">Bathroom remodel</span></label>
+                <label class="inline-flex items-center"><input type="checkbox" @change="toggleChoice('home_projects','gutter_replacement')"> <span class="ml-2">Gutter replacement</span></label>
+                <label class="inline-flex items-center"><input type="checkbox" @change="toggleChoice('home_projects','walk_in_tubs')"> <span class="ml-2">Walk in tubs</span></label>
+                <label class="inline-flex items-center"><input type="checkbox" @change="toggleChoice('home_projects','solar')"> <span class="ml-2">Solar</span></label>
+                <label class="inline-flex items-center"><input type="checkbox" @change="toggleChoice('home_projects','none')"> <span class="ml-2">None</span></label>
+              </div>
+              <input type="hidden" name="home_projects" :value="JSON.stringify(answers.home_projects || [])" />
+              <div class="mt-4 flex gap-2">
+                <button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button>
+                <button type="button" @click="stepNext" class="flex-1 rounded-lg bg-primary text-white px-4 py-3">Continue</button></div>
+            </div>
+
+            <!-- Step 13: Cars count (Rent branch) -->
+            <div v-show="step === 13" class="step-panel" data-step="13">
+              <div class="text-sm font-medium text-slate-700">How many cars are in your household?</div>
+              <div class="mt-3 grid grid-cols-1 gap-2">
+                <button type="button" @click="answer('cars_count','0')" class="w-full px-4 py-3 rounded-lg border">0</button>
+                <button type="button" @click="answer('cars_count','1')" class="w-full px-4 py-3 rounded-lg border">1</button>
+                <button type="button" @click="answer('cars_count','2')" class="w-full px-4 py-3 rounded-lg border">2</button>
+                <button type="button" @click="answer('cars_count','3+')" class="w-full px-4 py-3 rounded-lg border">3+</button>
+              </div>
+              <input type="hidden" name="cars_count" :value="answers.cars_count || ''" />
+              <div class="mt-4 flex gap-2"><button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button></div>
+            </div>
+
+            <!-- Step 14: Recent auto accident -->
+            <div v-show="step === 14" class="step-panel" data-step="14">
+              <div class="text-sm font-medium text-slate-700">Were you in an auto accident recently?</div>
+              <div class="mt-3 grid grid-cols-1 gap-2">
+                <button type="button" @click="answer('auto_accident','Yes')" class="w-full px-4 py-3 rounded-lg border">Yes</button>
+                <button type="button" @click="answer('auto_accident','No')" class="w-full px-4 py-3 rounded-lg border">No</button>
+              </div>
+              <input type="hidden" name="auto_accident" :value="answers.auto_accident || ''" />
+              <div class="mt-3 text-xs text-slate-600 leading-snug">By selecting Yes, I provide my express written consent to be contacted regarding potential motor vehicle accident assistance...</div>
+              <div class="mt-4 flex gap-2"><button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button></div>
+            </div>
+
+            <!-- Step 15: Education -->
+            <div v-show="step === 15" class="step-panel" data-step="15">
+              <div class="text-sm font-medium text-slate-700">Are you interested in continuing your education?</div>
+              <div class="mt-3 grid grid-cols-1 gap-2">
+                <button type="button" @click="answer('education','Yes')" class="w-full px-4 py-3 rounded-lg border">Yes</button>
+                <button type="button" @click="answer('education','No')" class="w-full px-4 py-3 rounded-lg border">No</button>
+              </div>
+              <input type="hidden" name="education" :value="answers.education || ''" />
+              <div class="mt-4 flex gap-2"><button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button></div>
+            </div>
+
+            <!-- Step 16: Pain treatment -->
+            <div v-show="step === 16" class="step-panel" data-step="16">
+              <div class="text-sm font-medium text-slate-700">Struggling With Pain? Make Under $40k & on Medicaid? Powerful Treatment Available!</div>
+              <div class="mt-3 grid grid-cols-1 gap-2"><button type="button" @click="answer('pain_treatment','Yes')" class="w-full px-4 py-3 rounded-lg border">Yes</button><button type="button" @click="answer('pain_treatment','No')" class="w-full px-4 py-3 rounded-lg border">No</button></div>
+              <input type="hidden" name="pain_treatment" :value="answers.pain_treatment || ''" />
+              <div class="mt-3 text-xs text-slate-600">*AGREEMENT TO BE CONTACTED: By selecting "YES" ... (consent text)</div>
+              <div class="mt-4 flex gap-2"><button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button></div>
+            </div>
+
+            <!-- Step 17: Prescription meds 7+ -->
+            <div v-show="step === 17" class="step-panel" data-step="17">
+              <div class="text-sm font-medium text-slate-700">Do you take 7 or more prescription medications?</div>
+              <div class="mt-3 grid grid-cols-1 gap-2"><button type="button" @click="answer('meds_7plus','Yes')" class="w-full px-4 py-3 rounded-lg border">YES</button><button type="button" @click="answer('meds_7plus','No')" class="w-full px-4 py-3 rounded-lg border">NO</button></div>
+              <input type="hidden" name="meds_7plus" :value="answers.meds_7plus || ''" />
+              <div class="mt-4 flex gap-2"><button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button></div>
+            </div>
+
+            <!-- Step 18: Veterans -->
+            <div v-show="step === 18" class="step-panel" data-step="18">
+              <div class="text-sm font-medium text-slate-700">Veterans: Get Up to $3,600/mo Tax-Free — See if you qualify</div>
+              <div class="mt-3 grid grid-cols-1 gap-2"><button type="button" @click="answer('veterans','Check')" class="w-full px-4 py-3 rounded-lg border">Check Eligibility</button></div>
+              <div class="mt-4 flex gap-2"><button type="button" @click="prev" class="flex-1 rounded-lg border px-4 py-3">&larr; Back</button><button type="button" @click="finalize" class="flex-1 rounded-lg bg-primary text-white px-4 py-3">Finish</button></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const { createApp } = Vue;
+      createApp({
+        data() { return {
+          step: 1,
+          startAmount: 1000000,
+          targetAmount: 1400000,
+          animatedAmount: 1000000,
+          domain: window.location.hostname || 'DOMAIN',
+          totalSteps: 18,
+          data: { email:'', first:'', last:'', dobMonth:'', dobDay:'', dobYear:'', gender:'', street:'', zip:'', city:'', state:'', phone:'' },
+          errors: {},
+          answers: {},
+          direction: 1
+        }; },
+        watch: {
+          step(newVal, oldVal) {
+            if (oldVal != null) this.direction = newVal > oldVal ? 1 : -1;
+            this.$nextTick(()=>{
+              const panel = this.$el.querySelector('[data-step="'+newVal+'"]');
+              if (!panel) return;
+              panel.classList.remove('from-right','from-left','slide-active');
+              panel.classList.add(this.direction === 1 ? 'from-right' : 'from-left');
+              requestAnimationFrame(()=>{
+                panel.classList.add('slide-active');
+                setTimeout(()=>{ panel.classList.remove('from-right','from-left'); }, 480);
+              });
+            });
+          }
+        },
+        computed: {
+          progressPercent() { return Math.min(100, Math.max(0, ((this.step - 1) / (this.totalSteps - 1)) * 100)); }
+        },
+        mounted() {
+          this.animateAmount();
+          this.$nextTick(()=>{
+            const first = this.$el.querySelector('[data-step="1"]');
+            if (first) first.classList.add('slide-active');
+          });
+        },
+        methods: {
+          animateAmount() {
+            const duration = 2200; // ms
+            const start = performance.now();
+            const from = this.startAmount; const to = this.targetAmount;
+            const step = (t) => {
+              const p = Math.min(1, (t - start) / duration);
+              this.animatedAmount = Math.floor(from + (to - from) * p);
+              if (p < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+          },
+          // centralized validation: returns true when stage is valid
+          validate(stage) {
+            // reset errors for a fresh validation run
+            this.errors = {};
+            if (stage === 'email') {
+              if (!this.data.email || !this.data.email.includes('@')) {
+                this.errors.email = 'Enter a valid email address';
+                return false;
+              }
+            }
+            if (stage === 'personal') {
+              if (!this.data.first) { this.errors.first = 'First name is required'; }
+              if (!this.data.last) { this.errors.last = 'Last name is required'; }
+              if (!this.data.dobYear) { this.errors.dobYear = 'Please select your birth year'; }
+              if (Object.keys(this.errors).length) return false;
+            }
+            if (stage === 'address') {
+              if (!this.data.street) { this.errors.street = 'Street address is required'; return false; }
+            }
+            return true;
+          },
+
+          // non-mutating mirror used for button disabled state checks
+          validateForCheck(stage) {
+            const errs = {};
+            if (stage === 'email') {
+              if (!this.data.email || !this.data.email.includes('@')) { errs.email = true; }
+            }
+            if (stage === 'personal') {
+              if (!this.data.first) { errs.first = true; }
+              if (!this.data.last) { errs.last = true; }
+              if (!this.data.dobYear) { errs.dobYear = true; }
+            }
+            if (stage === 'address') {
+              if (!this.data.street) { errs.street = true; }
+            }
+            if (stage === 'phone') {
+              if (!this.data.phone) { errs.phone = true; }
+            }
+            return Object.keys(errs).length === 0;
+          },
+
+          isValid(stage) {
+            // quick, non-destructive check used by button disabled binding
+            return this.validateForCheck(stage);
+          },
+
+          // validate then advance for early intake steps (replaces nextIf)
+          next(stage) {
+            if (!this.validate(stage)) return;
+            // original flow only advanced through the first intake steps
+            if (this.step < 4) this.step++;
+          },
+          answer(key,val,nextStep) {
+            // store simple answers and advance; optional nextStep overrides auto-advance
+            // Vue 3: use plain assignment on reactive objects
+            this.answers[key] = val;
+            if (typeof nextStep === 'number') {
+              this.step = nextStep;
+              return;
+            }
+            if (this.step < this.totalSteps) this.step++;
+          },
+          answerAndMaybeBranch(key,val,branch,nextStep) {
+            this.answers[key] = val;
+            // Updated branch logic (after step reordering):
+            // Own -> home_projects (step 12)
+            // Rent -> cars_count (step 13)
+            if (branch === 'own') { this.step = 12; return; }
+            if (branch === 'rent') { this.step = 13; return; }
+            if (typeof nextStep === 'number') { this.step = nextStep; return; }
+            if (this.step < this.totalSteps) this.step++;
+          },
+          toggleChoice(key,val) {
+            this.answers[key] = this.answers[key] || [];
+            const idx = this.answers[key].indexOf(val);
+            if (idx === -1) this.answers[key].push(val); else this.answers[key].splice(idx,1);
+          },
+          // simple increment used by quiz steps (renamed to avoid collision with next(stage))
+          stepNext() { if (this.step < this.totalSteps) this.step++; },
+          prev() { if (this.step > 1) this.step--; },
+          clearError(field) { if (this.errors && this.errors[field]) { delete this.errors[field]; } },
+          goto(n) { const v = Number(n); if (!isNaN(v) && v >= 1 && v <= this.totalSteps) this.step = v; },
+          gotoByClick(e) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left; const w = rect.width;
+            const pct = Math.max(0, Math.min(1, x / w));
+            // map percentage to steps (1..totalSteps)
+            const stepIndex = Math.round(pct * (this.totalSteps - 1)) + 1;
+            this.goto(stepIndex);
+          },
+          lookupZip() {
+            const zip = String(this.data.zip||'').trim();
+            if (!/^[0-9]{5}$/.test(zip)) return;
+            fetch('https://api.zippopotam.us/us/' + zip).then(r=>{
+              if (!r.ok) throw new Error('no'); return r.json();
+            }).then(json=>{
+              if (json.places && json.places.length) {
+                this.data.city = json.places[0]['place name'];
+                this.data.state = json.places[0]['state abbreviation'] || json.places[0]['state'];
+              }
+            }).catch(()=>{});
+          },
+          finalize() {
+            this.errors = {};
+            if (!this.data.phone) { this.errors.phone = 'Please enter a phone number'; return; }
+            // Attempt to record TrustedForm/Jornaya tokens (inputs/scripts added in head)
+            const tokenEl = document.getElementById('xxTrustedFormToken');
+            const trustedFormToken = tokenEl && tokenEl.value ? tokenEl.value : null;
+            // fire any Jornaya call&larr; Backs if available (placeholder)
+            if (window.LeadiD && typeof window.LeadiD === 'function') {
+              try { window.LeadiD('submit'); } catch(e){}
+            }
+
+            // Here you would post to server; we'll console.log and show a confirmation
+            console.log('Collected data:', this.data, { trustedFormToken });
+            const el = document.createElement('div'); el.textContent = 'Thanks — proceeding...';
+            el.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-4 py-2 rounded-md shadow';
+            document.body.appendChild(el);
+
+            // If this finalize call came from the phone step, advance into the quiz/questions
+            if (this.step === 4) {
+              // remove toast then advance to step 5
+              setTimeout(() => {
+                try { document.body.removeChild(el); } catch(e){}
+                this.step = 5;
+              }, 800);
+              return;
+            }
+
+            // Otherwise (final submission), keep the original confirmation timing and TODO redirect
+            setTimeout(()=>{ try{ document.body.removeChild(el); }catch(e){} }, 2200);
+            // TODO: redirect into quiz flow or POST to your server
+          }
+        }
+      }).mount('#app');
+    </script>
+
+    <!-- Jornaya noscript fall&larr; Back (optional) -->
+    <noscript><img src="https://create.leadid.com/noscript.gif?lac=YOUR_LAC&lck=YOUR_LCK&snippet_version=2" alt=""/></noscript>
+  </body>
+</html>

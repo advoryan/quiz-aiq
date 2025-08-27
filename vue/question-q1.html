@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vue Reactive & Computed Example</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #f8f9fa;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    button {
+      margin: 5px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #f1f1f1;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="card">
+      <h2>Счётчик: {{ state.count }}</h2>
+      <h3>Удвоенное значение (computed): {{ double }}</h3>
+      <button @click="state.count++">+1</button>
+      <button @click="state.count--">-1</button>
+      <button @click="state.count = 0">Reset</button>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, reactive, computed } = Vue;
+
+    createApp({
+      setup() {
+        // реактивный объект
+        const state = reactive({
+          count: 0
+        });
+
+        // вычисляемое свойство
+        const double = computed(() => state.count * 2);
+
+        return { state, double };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
