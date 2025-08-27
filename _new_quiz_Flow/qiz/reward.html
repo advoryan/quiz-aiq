@@ -105,6 +105,68 @@
   .progress-fill { background: linear-gradient(90deg,#16a34a,#10b981); height: 100%; width: 0%; transition: width 360ms cubic-bezier(.2,.8,.2,1); }
   .progress-label { font-size: 12px; color: rgba(15,23,42,0.85); }
   .progress-track { cursor: pointer; }
+
+  .progress { position: relative; }
+  .progress-bar { transition: all 1000ms cubic-bezier(.2,.8,.2,1);}
+  .progress {
+    position: relative;
+    overflow: visible; /* чтобы видно было то, что вылетает наружу */
+  }
+
+  .progress-highlight {
+    animation: progress-highlight 1.2s ease-out;
+  }
+
+  .progress-bar {
+    position: relative;
+    transition: all 1000ms cubic-bezier(.2,.8,.2,1);
+    overflow: visible;
+    border-radius: 0.375rem 0 0 0.375rem;
+  }
+
+  .progress-highlight .progress-bar::before,
+  .progress-highlight .progress-bar::after {
+    content: "✦";
+    position: absolute;
+    right: -10px; /* из конца прогресс-бара */
+    top: 50%;
+    font-size: 12px;
+    color: #10b981;
+    opacity: 0;
+    transform: translateY(-50%) scale(0);
+    animation: star-fly 1.2s ease-out forwards;
+    pointer-events: none;
+  }
+
+  .progress-highlight .progress-bar::after {
+    animation-delay: 0.3s;
+  }
+  .b-rad-done { border-radius: 0.375rem !important; }
+
+  @keyframes progress-highlight {
+    0%   { box-shadow: 0 0 0px 0px rgba(16, 184, 129, 0); }
+    50%  { box-shadow: 0 0 10px 6px rgba(16, 184, 129, 0.5); }
+    100% { box-shadow: 0 0 0px 0px rgba(16, 184, 129, 0); }
+  }
+
+  @keyframes star-fly {
+    0% {
+      opacity: 0;
+      transform: translate(0, -50%) scale(0);
+    }
+    20% {
+      opacity: 1;
+      transform: translate(8px, -15px) scale(1);
+    }
+    80% {
+      opacity: 0.6;
+      transform: translate(28px, -30px) scale(0.8);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(45px, -45px) scale(0);
+    }
+  }
   /* directional sliding panels */
   .step-panel { position: relative; }
   .step-panel.from-right { transform: translateX(48px); opacity:0; }
@@ -158,8 +220,8 @@
               <div class="text-xs text-slate-500">{{ Math.round(progressPercent) }}%</div>
             </div> -->
             <!-- Bootstrap progress bar bound to Vue computed progressPercent; clickable to navigate -->
-            <div class="progress" role="progressbar" :aria-valuenow="Math.round(progressPercent)" aria-valuemin="0" aria-valuemax="100">
-              <div class="progress-bar progress-bar-striped bg-success progress-bar-animated" role="progressbar" :aria-valuenow="Math.round(progressPercent)" aria-valuemin="0" aria-valuemax="100" :style="{ width: progressPercent + '%' }"></div>
+            <div id="progress" :class="{ 'progress-highlight': progressAnimate }" class="progress" role="progressbar" :aria-valuenow="Math.round(progressPercent)" aria-valuemin="0" aria-valuemax="100">
+              <div :class="{ 'b-rad-done': step === totalSteps }" class="progress-bar progress-bar-striped bg-success progress-bar-animated" role="progressbar" :aria-valuenow="Math.round(progressPercent)" aria-valuemin="0" aria-valuemax="100" :style="{ width: progressPercent + '%' }"></div>
             </div>
           </div>
           
@@ -511,10 +573,12 @@
     </div>
 
     <script>
-      const { createApp } = Vue;
+      const progressBar = document.querySelector('#progress');
+
+      const { createApp, ref, watch } = Vue;
       createApp({
         data() { return {
-          step: 2,
+          step: 7,
           startAmount: 1000000,
           targetAmount: 1450000,
           animatedAmount: 1000000,
@@ -530,10 +594,13 @@
           phaseList: ['Validating eligibility','Prioritizing partner rewards','Finalizing reserved spots'],
           completedPhases: 0,
           activePhase: 0,
-          matcherTimer: null
+          matcherTimer: null,
+          progressValue: 0,
+          progressAnimate: false,
         }; },
         watch: {
           step(newVal, oldVal) {
+            this.progressAnimate = false;
             if (oldVal != null) this.direction = newVal > oldVal ? 1 : -1;
             this.$nextTick(()=>{
               const panel = this.$el.querySelector('[data-step="'+newVal+'"]');
@@ -542,13 +609,19 @@
               panel.classList.add(this.direction === 1 ? 'from-right' : 'from-left');
               requestAnimationFrame(()=>{
                 panel.classList.add('slide-active');
-                setTimeout(()=>{ panel.classList.remove('from-right','from-left'); }, 480);
+                this.progressAnimate = true;
+                setTimeout(()=>{ 
+                  panel.classList.remove('from-right','from-left'); 
+                }, 480);
               });
             });
           }
         },
         computed: {
-          progressPercent() { return Math.min(100, Math.max(0, ((this.step - 1) / (this.totalSteps - 1)) * 100)); },
+          progressPercent() {
+            this.progressValue = Math.min(100, Math.max(0, ((this.step - 1) / (this.totalSteps - 1)) * 100));
+            return this.progressValue;
+          },
           // full month labels (short form to stay compact in select)
           months() { return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; },
           years() {
