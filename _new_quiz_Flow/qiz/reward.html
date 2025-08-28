@@ -15,6 +15,14 @@
     <script>
       tailwind.config = { important: true, theme: { extend: { colors: { primary: '#2563eb' } } } };
     </script>
+    <style>
+      /* autocomplete suggestion styles */
+      .address-autocomplete { position: relative; }
+      #suggestions { position: absolute; left: 0; right: 0; top: calc(100% + 6px); background: white; border: 1px solid #e6e6e6; border-radius: 8px; max-height: 220px; overflow:auto; padding:6px; z-index:9999; display:none; }
+      .autocomplete-suggestion { padding:8px 10px; cursor:pointer; border-radius:6px; font-size:14px; color:#0f172a; }
+      .autocomplete-suggestion:hover { background:#eef2ff; }
+      .autocomplete-suggestion small { display:block; color:#64748b; font-size:12px; }
+    </style>
 
     <style>
       /* fix tailwind and bootstrap styles collision */
@@ -186,15 +194,17 @@
   /* phase check pop */
   .phase-pop { animation: pop .4s cubic-bezier(.4,1.4,.4,1); }
   @keyframes pop { 0%{ transform:scale(.4); opacity:0; } 60%{ transform:scale(1.15); opacity:1; } 100%{ transform:scale(1); opacity:1; } }
-  .leading-snug { font-size: 11px!important; }
+  
+  div.leading-snug { font-size: 12px!important; }
     </style>
   </head>
   <body class="bg-slate-50 text-slate-900">
     <div id="app" class="min-h-screen flex items-center justify-center px-2">
       <div class="w-full max-w-lg bg-white rounded-2xl shadow-lg border border-slate-200">
         <div class="p-5 sm:p-6 text-center">
-          <h1 class="text-2xl font-bold text-blue-900">Exclusive Offer!</h1>
-          <div class="mt-4 flex items-center justify-center gap-3">
+          <!-- <h1 class="text-2xl font-bold text-blue-900">Exclusive Offer!</h1> -->
+          <h1 class="text-2xl font-bold text-blue-900">Complete The Quiz And The Claim Reward</h1>
+          <div v-if="step >= 1 && step < 4" class="mt-4 flex items-center justify-center gap-3">
             <div class="p-2 bg-primary/10 text-primary rounded-lg">
               <svg width="25px" height="25px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12.0011 17.3498C12.9013 17.3498 13.6311 16.6201 13.6311 15.7198C13.6311 14.8196 12.9013 14.0898 12.0011 14.0898C11.1009 14.0898 10.3711 14.8196 10.3711 15.7198C10.3711 16.6201 11.1009 17.3498 12.0011 17.3498Z" fill="#292D32"/>
@@ -228,14 +238,14 @@
           <!-- <p v-show="step === 1" class="mt-4 text-sm text-slate-700">Will you be next? Enter your email so we can contact you.</p> -->
         </div>
 
-        <div class="p-5 sm:p-6 pt-4 border-t border-slate-100">
+        <div class="p-5 sm:p-6 pt-2 border-t border-slate-100">
           <!-- Steps -->
           <form @submit.prevent class="space-y-4" autocomplete="on" name="reward-form">
             <!-- Step 1: Email intake -->
             <div v-show="step === 1" class="step-panel" data-step="1">
-              <h3 class="mb-4 text-md font-semibold text-blue-900 text-center">Will you be next? Enter your email so we can contact you.</h3>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Will you be next? Enter your email so we can contact you.</h3>
               <label class="block text-sm text-slate-700">Email</label>
-              <input v-model="data.email" @input="clearError('email')" type="email" required class="mt-1 w-full rounded-lg border border-slate-200 px-4 py-3 text-sm" placeholder="you@example.com" autocomplete="email"/>
+              <input v-model="data.email" @input="clearError('email')" type="email" class="mt-1 w-full rounded-lg border border-slate-200 px-4 py-3 text-sm" placeholder="you@example.com" autocomplete="email"/>
               <div v-if="errors.email" class="mt-1 text-xs text-rose-600">{{ errors.email }}</div>
               <div class="mt-8 flex gap-2">
                 <button type="button" @click="next('email')" :disabled="!isValid('email')" :aria-disabled="!isValid('email')" 
@@ -248,6 +258,7 @@
 
             <!-- Step 2: Personal info -->
             <div v-show="step === 2" class="step-panel" data-step="2">
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Tell us about yourself</h3>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label class="text-sm text-slate-700">
                   <div class="mb-1">First Name</div>
@@ -262,7 +273,7 @@
               </div>
 
               <div class="min-w-100 pt-2 pb-0">
-                <label class="text-sm text-slate-700">Selected Birth Day: &nbsp;
+                <label class="text-sm text-slate-700">Date Of Birth: &nbsp;
                 <span class="font-medium text-blue-500">{{ data.dobMonth + '-' + data.dobDay + '-' + data.dobYear }}</span></label>
               </div>
               <div class="mt-3 grid grid-cols-3 gap-2">
@@ -299,14 +310,18 @@
 
             <!-- Step 3: Address with ZIP autofill (Zippopotamus free API) -->
             <div v-show="step === 3" class="step-panel" data-step="3">
-              <label class="block text-sm text-slate-700">Street Address - start typing for autofill</label>
-              <input v-model="data.street" @input="clearError('street')" type="text" name="street-address" autocomplete="street-address" class="mt-1 w-full rounded-lg border border-slate-200 px-4 py-3 text-sm" placeholder="123 Main St" />
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Enter your address</h3>
+              <label class="block text-sm text-slate-700">Street Address:</label>
+              <div class="address-autocomplete mt-1">
+                <input id="street_address_input" v-model="data.street" @input="clearError('street')" type="text" name="street-address" autocomplete="street-address" class="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm" placeholder="Start typing here..." />
+                <div id="suggestions"></div>
+              </div>
               <div v-if="errors.street" class="mt-1 text-xs text-rose-600">{{ errors.street }}</div>
 
               <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <input v-model="data.zip" @blur="lookupZip" @input="clearError('zip')" type="text" name="postal-code" autocomplete="postal-code" placeholder="ZIP" class="rounded-lg border border-slate-200 px-4 py-3 text-sm" />
-                <input v-model="data.city" type="text" name="address-level2" autocomplete="address-level2" placeholder="City" class="rounded-lg border border-slate-200 px-4 py-3 text-sm" />
-                <input v-model="data.state" type="text" name="address-level1" autocomplete="address-level1" placeholder="State" class="rounded-lg border border-slate-200 px-4 py-3 text-sm" />
+                <input id="zip_code_input" v-model="data.zip" @blur="lookupZip" @input="clearError('zip')" type="text" name="postal-code" autocomplete="postal-code" placeholder="ZIP" class="rounded-lg border border-slate-200 px-4 py-3 text-sm" />
+                <input id="city_input" v-model="data.city" type="text" name="address-level2" autocomplete="address-level2" placeholder="City" class="rounded-lg border border-slate-200 px-4 py-3 text-sm" />
+                <input id="state_input" v-model="data.state" type="text" name="address-level1" autocomplete="address-level1" placeholder="State" class="rounded-lg border border-slate-200 px-4 py-3 text-sm" />
               </div>
 
               <!-- <div class="mt-2 text-xs text-slate-500">Start typing the address for autofill</div> -->
@@ -319,6 +334,7 @@
 
             <!-- Step 4: Phone + TCPA -->
             <div v-show="step === 4" class="step-panel" data-step="4">
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Enter your phone number</h3>
               <label class="block text-sm text-slate-700">Phone</label>
               <input v-model="data.phone" @input="clearError('phone')" type="tel" name="tel" autocomplete="tel" placeholder="555-555-5555" class="mt-1 w-full rounded-lg border border-slate-200 px-4 py-3 text-sm" />
               <div v-if="errors.phone" class="mt-1 text-xs text-rose-600">{{ errors.phone }}</div>
@@ -337,33 +353,33 @@
 
             <!-- Step 5: Feeling lucky -->
             <div v-show="step === 5" class="step-panel" data-step="5">
-              <div class="text-sm font-medium text-slate-700">Are you feeling lucky today?</div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Are you feeling lucky today?</h3>
               <div class="mt-3 grid grid-cols-1 gap-2">
                 <button type="button" @click="answer('feeling_lucky','Yes')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Yes</button>
                 <button type="button" @click="answer('feeling_lucky','No')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">No</button>
               </div>
               <input type="hidden" name="feeling_lucky" :value="answers.feeling_lucky || ''" />
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button> -->
               </div>
             </div>
 
             <!-- Step 6: Checking account -->
             <div v-show="step === 6" class="step-panel" data-step="6">
-              <div class="text-sm font-medium text-slate-700">Do you have an active checking account?</div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Do you have an active checking account?</h3>
               <div class="mt-3 grid grid-cols-1 gap-2">
                 <button type="button" @click="answer('checking_account','Yes')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Yes</button>
                 <button type="button" @click="answer('checking_account','No')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">No</button>
               </div>
               <input type="hidden" name="checking_account" :value="answers.checking_account || ''" />
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button> -->
               </div>
             </div>
 
             <!-- Step 7: Employment status -->
             <div v-show="step === 7" class="step-panel" data-step="7">
-              <div class="text-sm font-medium text-slate-700">What is your current employment status?</div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">What is your current employment status?</h3>
               <div class="mt-3 grid grid-cols-1 gap-2 text-sm">
                 <button type="button" @click="answer('employment_status','Employed')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Employed</button>
                 <button type="button" @click="answer('employment_status','Unemployed')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Unemployed</button>
@@ -373,13 +389,13 @@
               </div>
               <input type="hidden" name="employment_status" :value="answers.employment_status || ''" />
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button> -->
               </div>
             </div>
 
             <!-- Step 8: Use reward -->
             <div v-show="step === 8" class="step-panel" data-step="8">
-              <div class="text-sm font-medium text-slate-700">How do you plan to use your reward?</div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">How do you plan to use your reward?</h3>
               <div class="mt-3 grid grid-cols-1 gap-2">
                 <button type="button" @click="answer('use_reward','Save It')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Save It</button>
                 <button type="button" @click="answer('use_reward','Spend It')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Spend It</button>
@@ -387,13 +403,13 @@
               </div>
               <input type="hidden" name="use_reward" :value="answers.use_reward || ''" />
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button> -->
               </div>
             </div>
 
             <!-- Step 9: Stop sign (simple check) -->
             <div v-show="step === 9" class="step-panel" data-step="9">
-              <div class="text-sm font-medium text-slate-700">What color is a stop sign?</div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">What color is a stop sign?</h3>
               <div class="mt-3 grid grid-cols-1 gap-2">
                 <button type="button" @click="answer('stop_sign','Blue')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Blue</button>
                 <button type="button" @click="answer('stop_sign','Yellow')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Yellow</button>
@@ -402,13 +418,13 @@
               </div>
               <input type="hidden" name="stop_sign" :value="answers.stop_sign || ''" />
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button> -->
               </div>
             </div>
 
             <!-- Step 10: Health Insurance -->
             <div v-show="step === 10" class="step-panel" data-step="10">
-              <div class="text-sm font-medium text-slate-700">Which best describes your Health Insurance coverage? <span class="text-xs text-slate-500">(Optional)</span></div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Which best describes your Health Insurance coverage? <span class="text-xs text-slate-500">(Optional)</span></h3>
               <div class="mt-3 grid grid-cols-1 gap-2 text-sm">
                 <button type="button" @click="answer('health_ins','Medicare')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Medicare</button>
                 <button type="button" @click="answer('health_ins','Medicaid')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Medicaid</button>
@@ -421,44 +437,44 @@
               <input type="hidden" name="health_ins" :value="answers.health_ins || ''" />
               <div class="mt-3 text-xs text-slate-600 leading-snug">By selecting any of the options above except "Skip," I provide my express written consent ... (consent text recorded)</div>
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button> -->
               </div>
             </div>
 
             <!-- Step 11: Rent or Own -->
             <div v-show="step === 11" class="step-panel" data-step="11">
-              <div class="text-sm font-medium text-slate-700">Do you rent or own your home?</div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Do you rent or own your home?</h3>
               <div class="mt-3 grid grid-cols-1 gap-2">
                 <button type="button" @click="answerAndMaybeBranch('home_ownership','Rent','rent')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Rent</button>
                 <button type="button" @click="answerAndMaybeBranch('home_ownership','Own','own')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Own</button>
               </div>
               <input type="hidden" name="home_ownership" :value="answers.home_ownership || ''" />
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button> -->
               </div>
             </div>
 
             <!-- Step 12: Home improvement (Own branch) -->
             <div v-show="step === 12" class="step-panel" data-step="12">
-              <div class="text-sm font-medium text-slate-700">Which home improvement projects are you considering? (select any)</div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Which home improvement projects are you considering? (select any)</h3>
               <div class="mt-3 grid grid-cols-1 gap-2">
-                <label class="inline-flex items-center ml-2"><input type="checkbox" @change="toggleChoice('home_projects','windows')" class="w-4 h-4 text-blue-600 bg-gray-50 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">Windows</span></label>
-                <label class="inline-flex items-center ml-2"><input type="checkbox" @change="toggleChoice('home_projects','roofing')" class="w-4 h-4 text-blue-600 bg-gray-50 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">Roofing</span></label>
-                <label class="inline-flex items-center ml-2"><input type="checkbox" @change="toggleChoice('home_projects','bathroom_remodel')" class="w-4 h-4 text-blue-600 bg-gray-50 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">Bathroom remodel</span></label>
-                <label class="inline-flex items-center ml-2"><input type="checkbox" @change="toggleChoice('home_projects','gutter_replacement')" class="w-4 h-4 text-blue-600 bg-gray-50 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">Gutter replacement</span></label>
-                <label class="inline-flex items-center ml-2"><input type="checkbox" @change="toggleChoice('home_projects','walk_in_tubs')" class="w-4 h-4 text-blue-600 bg-gray-50 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">Walk in tubs</span></label>
-                <label class="inline-flex items-center ml-2"><input type="checkbox" @change="toggleChoice('home_projects','solar')" class="w-4 h-4 text-blue-600 bg-gray-50 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">Solar</span></label>
-                <label class="inline-flex items-center ml-2"><input type="checkbox" @change="toggleChoice('home_projects','none')" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">None</span></label>
+                <label class="inline-flex items-center ml-2 p-2 border rounded border-slate-300 bg-slate-100"><input type="checkbox" @change="toggleChoice('home_projects','windows')" class="w-4 h-4 text-blue-600 bg-gray-50 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">Windows</span></label>
+                <label class="inline-flex items-center ml-2 p-2 border rounded border-slate-300 bg-slate-100"><input type="checkbox" @change="toggleChoice('home_projects','roofing')" class="w-4 h-4 text-blue-600 bg-gray-50 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">Roofing</span></label>
+                <label class="inline-flex items-center ml-2 p-2 border rounded border-slate-300 bg-slate-100"><input type="checkbox" @change="toggleChoice('home_projects','bathroom_remodel')" class="w-4 h-4 text-blue-600 bg-gray-50 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">Bathroom remodel</span></label>
+                <label class="inline-flex items-center ml-2 p-2 border rounded border-slate-300 bg-slate-100"><input type="checkbox" @change="toggleChoice('home_projects','gutter_replacement')" class="w-4 h-4 text-blue-600 bg-gray-50 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">Gutter replacement</span></label>
+                <label class="inline-flex items-center ml-2 p-2 border rounded border-slate-300 bg-slate-100"><input type="checkbox" @change="toggleChoice('home_projects','walk_in_tubs')" class="w-4 h-4 text-blue-600 bg-gray-50 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">Walk in tubs</span></label>
+                <label class="inline-flex items-center ml-2 p-2 border rounded border-slate-300 bg-slate-100"><input type="checkbox" @change="toggleChoice('home_projects','solar')" class="w-4 h-4 text-blue-600 bg-gray-50 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">Solar</span></label>
+                <label class="inline-flex items-center ml-2 p-2 border rounded border-slate-300 bg-slate-100"><input type="checkbox" @change="toggleChoice('home_projects','none')" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-2xl focus:ring-blue-500"> <span class="ml-3">None</span></label>
               </div>
               <input type="hidden" name="home_projects" :value="JSON.stringify(answers.home_projects || [])" />
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="rounded-lg border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="rounded-lg border px-4 py-3">&larr; Back</button> -->
                 <button type="button" @click="stepNext" class="flex-1 rounded-lg  bg-gray-50 bg-primary text-white px-4 py-3">Continue</button></div>
             </div>
 
             <!-- Step 13: Cars count (Rent branch) -->
             <div v-show="step === 13" class="step-panel" data-step="13">
-              <div class="text-sm font-medium text-slate-700">How many cars are in your household?</div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">How many cars are in your household?</h3>
               <div class="mt-3 grid grid-cols-1 gap-2">
                 <button type="button" @click="answer('cars_count','0')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">0</button>
                 <button type="button" @click="answer('cars_count','1')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">1</button>
@@ -467,13 +483,13 @@
               </div>
               <input type="hidden" name="cars_count" :value="answers.cars_count || ''" />
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button> -->
               </div>
             </div>
 
             <!-- Step 14: Recent auto accident -->
             <div v-show="step === 14" class="step-panel" data-step="14">
-              <div class="text-sm font-medium text-slate-700">Were you in an auto accident recently?</div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Were you in an auto accident recently?</h3>
               <div class="mt-3 grid grid-cols-1 gap-2">
                 <button type="button" @click="answer('auto_accident','Yes')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Yes</button>
                 <button type="button" @click="answer('auto_accident','No')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">No</button>
@@ -481,26 +497,26 @@
               <input type="hidden" name="auto_accident" :value="answers.auto_accident || ''" />
               <div class="mt-3 text-xs text-slate-600 leading-snug">By selecting Yes, I provide my express written consent to be contacted regarding potential motor vehicle accident assistance...</div>
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button> -->
               </div>
             </div>
 
             <!-- Step 15: Education -->
             <div v-show="step === 15" class="step-panel" data-step="15">
-              <div class="text-sm font-medium text-slate-700">Are you interested in continuing your education?</div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Are you interested in continuing your education?</h3>
               <div class="mt-3 grid grid-cols-1 gap-2">
                 <button type="button" @click="answer('education','Yes')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Yes</button>
                 <button type="button" @click="answer('education','No')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">No</button>
               </div>
               <input type="hidden" name="education" :value="answers.education || ''" />
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button> -->
               </div>
             </div>
 
             <!-- Step 16: Pain treatment -->
             <div v-show="step === 16" class="step-panel" data-step="16">
-              <div class="text-sm font-medium text-slate-700">Struggling With Pain? Make Under $40k & on Medicaid? Powerful Treatment Available!</div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Struggling With Pain? Make Under $40k & on Medicaid? Powerful Treatment Available!</h3>
               <div class="mt-3 grid grid-cols-1 gap-2">
                 <button type="button" @click="answer('pain_treatment','Yes')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Yes</button>
                 <button type="button" @click="answer('pain_treatment','No')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">No</button>
@@ -508,29 +524,29 @@
               <input type="hidden" name="pain_treatment" :value="answers.pain_treatment || ''" />
               <div class="mt-3 text-xs text-slate-600">*AGREEMENT TO BE CONTACTED: By selecting "YES" ... (consent text)</div>
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button> -->
               </div>
             </div>
 
             <!-- Step 17: Prescription meds 7+ -->
             <div v-show="step === 17" class="step-panel" data-step="17">
-              <div class="text-sm font-medium text-slate-700">Do you take 7 or more prescription medications?</div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Do you take 7 or more prescription medications?</h3>
               <div class="mt-3 grid grid-cols-1 gap-2">
                 <button type="button" @click="answer('meds_7plus','Yes')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">Yes</button>
                 <button type="button" @click="answer('meds_7plus','No')" class="w-full px-4 py-3 rounded-lg border bg-blue-500 text-white">No</button></div>
               <input type="hidden" name="meds_7plus" :value="answers.meds_7plus || ''" />
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button> -->
               </div>
             </div>
 
             <!-- Step 18: Veterans -->
             <div v-show="step === 18" class="step-panel" data-step="18">
-              <div class="text-sm font-medium text-slate-700">Veterans: Get Up to $3,600/mo Tax-Free — See if you qualify</div>
+              <h3 class="mb-4 text-lg font-semibold text-blue-900 text-center">Veterans: Get Up to $3,600/mo Tax-Free — See if you qualify</h3>
               <div class="mt-3 grid grid-cols-1 gap-2">
                 <button type="button" @click="answer('veterans','Check'); finalize()" class="w-full px-4 py-3 rounded-lg border bg-emerald-500 text-white">Check Eligibility</button></div>
               <div class="mt-8 flex gap-2">
-                <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button>
+                <!-- <button type="button" @click="prev" class="flex-1 rounded-lg bg-gray-50 border px-4 py-3">&larr; Back</button> -->
                 <button type="button" @click="finalize" class="flex-1 rounded-lg bg-primary text-white px-4 py-3">Finish</button>
               </div>
             </div>
@@ -571,14 +587,13 @@
         </div>
       </div>
     </div>
-
     <script>
       const progressBar = document.querySelector('#progress');
 
       const { createApp, ref, watch } = Vue;
       createApp({
         data() { return {
-          step: 7,
+          step: 1,
           startAmount: 1000000,
           targetAmount: 1450000,
           animatedAmount: 1000000,
@@ -650,13 +665,26 @@
         },
         methods: {
           animateAmount() {
-            const duration = 2200; // ms
+            const duration = 3000; // ms
             const start = performance.now();
             const from = this.startAmount; const to = this.targetAmount;
-            const step = (t) => {
-              const p = Math.min(1, (t - start) / duration);
-              this.animatedAmount = Math.floor(from + (to - from) * p);
-              if (p < 1) requestAnimationFrame(step);
+            // exponential deceleration (easeOutExpo) — tuned to be a bit slower at the start
+            const easeOutExpo = (t) => {
+              if (t >= 1) return 1;
+              // smaller multiplier -> slower early progress (keeps total duration the same)
+              const multiplier = 5; // tuned down slightly for a gentler start
+              return 1 - Math.pow(2, -multiplier * t);
+            };
+            const step = (now) => {
+              const raw = Math.min(1, (now - start) / duration);
+              const eased = easeOutExpo(raw);
+              this.animatedAmount = Math.floor(from + (to - from) * eased);
+              if (raw < 1) {
+                requestAnimationFrame(step);
+              } else {
+                // ensure we end exactly at target
+                this.animatedAmount = to;
+              }
             };
             requestAnimationFrame(step);
           },
@@ -686,12 +714,15 @@
           validateForCheck(stage) {
             const errs = {};
             if (stage === 'email') {
-              if (!this.data.email || !this.data.email.includes('@')) { errs.email = true; }
+              const e = String(this.data.email || '').trim();
+              // lightweight email regex: local@domain.tld (covers common cases, not fully RFC5322)
+              const emailOk = e.length > 4 && e.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+              if (!emailOk) { errs.email = true; }
             }
             if (stage === 'personal') {
               if (!this.data.first) { errs.first = true; }
               if (!this.data.last) { errs.last = true; }
-              if (!this.data.dobYear) { errs.dobYear = true; }
+              if (!this.data.dobYear && !this.data.dobMonth && !this.data.dobDay) { errs.dobYear = true; }
             }
             if (stage === 'address') {
               if (!this.data.street) { errs.street = true; }
@@ -846,6 +877,84 @@
         }
       }).mount('#app');
     </script>
+
+      <script>
+        // Lightweight address autocomplete using HERE autosuggest.
+        (function(){
+          const addressInput = document.getElementById('street_address_input');
+          const suggestionsDiv = document.getElementById('suggestions');
+          if (!addressInput || !suggestionsDiv) return;
+
+          let timeoutId;
+          let suppressNextInput = false; // when true, the next input event from the street field is ignored
+          const CENTER_AT = '39.8283,-98.5795';
+          const API_KEY = 'O8ALlQCBXm0LWDjJfADr-y-WQLlt47V98hNDgo0mZYI';
+
+          function dispatchInput(el){
+            // ensure Vue v-model picks up programmatic value changes
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+
+          addressInput.addEventListener('input', function(){
+            // If we programmatically set the value after selecting a suggestion,
+            // ignore the next input event to avoid re-querying the API.
+            if (suppressNextInput) { suppressNextInput = false; suggestionsDiv.style.display = 'none'; return; }
+            const query = this.value.trim();
+            if (query.length < 1) {
+              suggestionsDiv.innerHTML = '';
+              suggestionsDiv.style.display = 'none';
+              return;
+            }
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+              const url = new URL('https://autosuggest.search.hereapi.com/v1/autosuggest');
+              url.search = new URLSearchParams({ apiKey: API_KEY, q: query, at: CENTER_AT, in: 'countryCode:USA', limit: 7, show: 'details' });
+              fetch(url).then(r=>r.json()).then(data=>{
+                suggestionsDiv.innerHTML = '';
+                if (!data || !data.items || data.items.length === 0) {
+                  suggestionsDiv.innerHTML = '<div class="text-xs text-slate-500 p-2">No suggestions found.</div>';
+                  suggestionsDiv.style.display = 'block';
+                  return;
+                }
+                suggestionsDiv.style.display = 'block';
+                data.items.forEach(item=>{
+                  const div = document.createElement('div');
+                  div.className = 'autocomplete-suggestion';
+                  const label = item.address && item.address.label ? item.address.label : (item.title || item.id || '');
+                  div.innerHTML = '<div>' + label + '</div>' + (item.address && item.address.city ? ('<small>'+ (item.address.city || '') + (item.address.stateCode ? (', ' + item.address.stateCode) : '') + '</small>') : '');
+                  div.addEventListener('click', ()=>{
+                    // populate fields with the best available parts
+                    const house = (item.address && item.address.houseNumber) ? item.address.houseNumber + ' ' : '';
+                    const street = item.address && item.address.street ? item.address.street : (item.title || '');
+                    const city = item.address && item.address.city ? item.address.city : '';
+                    const state = item.address && item.address.stateCode ? item.address.stateCode : (item.address && item.address.state ? item.address.state : '');
+                    const postal = item.address && item.address.postalCode ? String(item.address.postalCode).split('-')[0] : '';
+
+                    addressInput.value = (house + street).trim();
+                    const cityEl = document.getElementById('city_input');
+                    const stateEl = document.getElementById('state_input');
+                    const zipEl = document.getElementById('zip_code_input');
+                    if (cityEl) { cityEl.value = city; dispatchInput(cityEl); }
+                    if (stateEl) { stateEl.value = state; dispatchInput(stateEl); }
+                    if (zipEl) { zipEl.value = postal; dispatchInput(zipEl); }
+                    // update Vue-bound street via input dispatch
+                    // suppress the immediate input handler run triggered by this dispatch
+                    suppressNextInput = true;
+                    dispatchInput(addressInput);
+                    suggestionsDiv.innerHTML = '';
+                    suggestionsDiv.style.display = 'none';
+                  });
+                  suggestionsDiv.appendChild(div);
+                });
+              }).catch(err=>{
+                console.warn('Autocomplete error', err);
+              });
+            }, 600);
+          });
+    // hide suggestions when clicking outside
+    document.addEventListener('click', (e)=>{ if (!suggestionsDiv.contains(e.target) && e.target !== addressInput) { suggestionsDiv.innerHTML=''; suggestionsDiv.style.display='none'; } });
+        })();
+      </script>
 
     <!-- Jornaya noscript fall&larr; Back (optional) -->
     <noscript><img src="https://create.leadid.com/noscript.gif?lac=YOUR_LAC&lck=YOUR_LCK&snippet_version=2" alt=""/></noscript>
